@@ -31,7 +31,8 @@ describe('Login page', () => {
   it('logs in', async () => {
     vi.spyOn(globalThis, 'fetch').mockResolvedValueOnce({
       ok: true,
-      json: () => Promise.resolve({ token: 'test-token' }),
+      json: () =>
+        Promise.resolve({ access: 'test-access', refresh: 'test-refresh' }),
     });
 
     renderPage();
@@ -39,9 +40,10 @@ describe('Login page', () => {
     fireEvent.change(screen.getByLabelText(/password/i), { target: { value: 'b' } });
     fireEvent.click(screen.getByText(/login/i));
 
-    await waitFor(() =>
-      expect(localStorage.getItem('token')).toBe('test-token')
-    );
+    await waitFor(() => {
+      expect(localStorage.getItem('token')).toBe('test-access');
+      expect(localStorage.getItem('refresh')).toBe('test-refresh');
+    });
 
     globalThis.fetch.mockRestore();
   });

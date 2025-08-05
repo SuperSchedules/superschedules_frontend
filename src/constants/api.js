@@ -6,6 +6,6 @@ export const API_BASE_URL = import.meta.env.PROD
   : DEV_API_BASE_URL;
 
 export const AUTH_ENDPOINTS = {
-  login: `${API_BASE_URL}/auth/login/`,
-  logout: `${API_BASE_URL}/auth/logout/`,
+  login: `${API_BASE_URL}/api/token/`,
+  refresh: `${API_BASE_URL}/api/token/refresh/`,
 };

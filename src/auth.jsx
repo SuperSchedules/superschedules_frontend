@@ -6,8 +6,9 @@ export const AuthContext = createContext(null);
 
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(() => {
-    const stored = localStorage.getItem('token');
-    return stored ? { token: stored } : null;
+    const token = localStorage.getItem('token');
+    const refresh = localStorage.getItem('refresh');
+    return token ? { token, refresh } : null;
   });
 
   const login = async (username, password) => {
@@ -20,22 +21,41 @@ export function AuthProvider({ children }) {
       throw new Error('Login failed');
     }
     const data = await response.json();
-    const token = data.token;
-    localStorage.setItem('token', token);
-    setUser({ token });
+    const { access, refresh } = data;
+    localStorage.setItem('token', access);
+    localStorage.setItem('refresh', refresh);
+    setUser({ token: access, refresh });
   };
 
-  const logout = async () => {
-    await fetch(AUTH_ENDPOINTS.logout, {
+  const refreshToken = async () => {
+    const storedRefresh = localStorage.getItem('refresh');
+    if (!storedRefresh) {
+      throw new Error('No refresh token');
+    }
+    const response = await fetch(AUTH_ENDPOINTS.refresh, {
       method: 'POST',
-      headers: user ? { Authorization: `Bearer ${user.token}` } : {},
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ refresh: storedRefresh }),
     });
+    if (!response.ok) {
+      logout();
+      throw new Error('Refresh failed');
+    }
+    const data = await response.json();
+    const access = data.access;
+    localStorage.setItem('token', access);
+    setUser({ token: access, refresh: storedRefresh });
+    return access;
+  };
+
+  const logout = () => {
     localStorage.removeItem('token');
+    localStorage.removeItem('refresh');
     setUser(null);
   };
 
   return (
-    <AuthContext.Provider value={{ user, login, logout }}>
+    <AuthContext.Provider value={{ user, login, logout, refreshToken }}>
       {children}
     </AuthContext.Provider>
   );
