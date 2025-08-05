@@ -23,6 +23,8 @@ describe('Login page', () => {
     renderPage();
     expect(screen.getByLabelText(/username/i)).toBeInTheDocument();
     expect(screen.getByLabelText(/password/i)).toBeInTheDocument();
+    expect(screen.getByLabelText(/username/i)).toHaveAttribute('autocomplete', 'username');
+    expect(screen.getByLabelText(/password/i)).toHaveAttribute('autocomplete', 'current-password');
   });
 
   it('logs in', () => {

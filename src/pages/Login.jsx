@@ -23,6 +23,7 @@ export default function Login() {
             value={username}
             onChange={(e) => setUsername(e.target.value)}
             aria-label="username"
+            autoComplete="username"
           />
         </label>
       </div>
@@ -34,6 +35,7 @@ export default function Login() {
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             aria-label="password"
+            autoComplete="current-password"
           />
         </label>
       </div>
