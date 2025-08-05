@@ -5,6 +5,8 @@ import Sidebar from './components/Sidebar';
 import Home from './pages/Home';
 import Login from './pages/Login';
 import About from './pages/About';
+import CreateUser from './pages/CreateUser';
+import VerifyAccount from './pages/VerifyAccount';
 import './App.css';
 
 export default function App() {
@@ -20,6 +22,8 @@ export default function App() {
                 <Route path="/" element={<Home />} />
                 <Route path="/login" element={<Login />} />
                 <Route path="/about" element={<About />} />
+                <Route path="/create-user" element={<CreateUser />} />
+                <Route path="/verify-account" element={<VerifyAccount />} />
               </Routes>
             </div>
           </div>

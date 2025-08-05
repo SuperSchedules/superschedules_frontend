@@ -8,4 +8,5 @@ export const API_BASE_URL = import.meta.env.PROD
 export const AUTH_ENDPOINTS = {
   login: `${API_BASE_URL}/api/token/`,
   refresh: `${API_BASE_URL}/api/token/refresh/`,
+  register: `${API_BASE_URL}/api/users/`,
 };
