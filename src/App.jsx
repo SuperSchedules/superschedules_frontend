@@ -4,6 +4,7 @@ import TopBar from './components/TopBar';
 import Sidebar from './components/Sidebar';
 import Home from './pages/Home';
 import Login from './pages/Login';
+import About from './pages/About';
 import './App.css';
 
 export default function App() {
@@ -18,6 +19,7 @@ export default function App() {
               <Routes>
                 <Route path="/" element={<Home />} />
                 <Route path="/login" element={<Login />} />
+                <Route path="/about" element={<About />} />
               </Routes>
             </div>
           </div>
