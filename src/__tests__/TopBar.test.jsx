@@ -5,7 +5,9 @@ import { AuthProvider, AuthContext } from '../auth.jsx';
 import { describe, it, expect, afterEach, vi } from 'vitest';
 
 function renderWithAuth(ui, { user } = {}) {
-  const value = user ? { user, login: vi.fn(), logout: vi.fn() } : undefined;
+  const value = user
+    ? { user, login: vi.fn(), logout: vi.fn(), refreshToken: vi.fn() }
+    : undefined;
   return render(
     <MemoryRouter>
       {value ? (
