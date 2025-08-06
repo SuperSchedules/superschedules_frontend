@@ -9,6 +9,7 @@ import About from './pages/About';
 import CreateUser from './pages/CreateUser';
 import VerifyAccount from './pages/VerifyAccount';
 import Calendar from './pages/Calendar';
+import ResetPassword from './pages/ResetPassword';
 import './App.css';
 
 export default function App() {
@@ -28,6 +29,7 @@ export default function App() {
                 <Route path="/about" element={<About />} />
                 <Route path="/create-user" element={<CreateUser />} />
                 <Route path="/verify-account" element={<VerifyAccount />} />
+                <Route path="/reset-password" element={<ResetPassword />} />
                 <Route path="/calendar" element={<Calendar />} />
               </Routes>
             </div>
