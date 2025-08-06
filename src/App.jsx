@@ -1,12 +1,8 @@
-import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import { BrowserRouter } from 'react-router-dom';
 import { AuthProvider } from './auth.jsx';
 import TopBar from './components/TopBar';
 import Sidebar from './components/Sidebar';
-import Home from './pages/Home';
-import Login from './pages/Login';
-import About from './pages/About';
-import CreateUser from './pages/CreateUser';
-import VerifyAccount from './pages/VerifyAccount';
+import AppRoutes from './router';
 import './App.css';
 
 export default function App() {
@@ -18,13 +14,7 @@ export default function App() {
           <div className="main">
             <Sidebar />
             <div className="content">
-              <Routes>
-                <Route path="/" element={<Home />} />
-                <Route path="/login" element={<Login />} />
-                <Route path="/about" element={<About />} />
-                <Route path="/create-user" element={<CreateUser />} />
-                <Route path="/verify-account" element={<VerifyAccount />} />
-              </Routes>
+              <AppRoutes />
             </div>
           </div>
         </div>
