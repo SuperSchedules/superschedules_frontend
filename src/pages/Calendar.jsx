@@ -1,10 +1,11 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { Calendar as BigCalendar, dateFnsLocalizer } from 'react-big-calendar';
 import { format, parse, startOfWeek, getDay } from 'date-fns';
 import { enUS } from 'date-fns/locale';
 import 'react-big-calendar/lib/css/react-big-calendar.css';
 import './Calendar.css';
 import { EVENTS_ENDPOINTS } from '../constants/api.js';
+import { useAuth } from '../auth.jsx';
 
 const locales = {
   'en-US': enUS,
@@ -22,10 +23,22 @@ export default function CalendarPage() {
   const [events, setEvents] = useState([]);
   const [selectedEvent, setSelectedEvent] = useState(null);
 
+  const { user } = useAuth();
+  const fetchedRef = useRef(false);
+
   useEffect(() => {
+    if (fetchedRef.current || !user?.token) {
+      return;
+    }
+    fetchedRef.current = true;
+
     async function loadEvents() {
       try {
-        const res = await fetch(EVENTS_ENDPOINTS.list);
+        const res = await fetch(EVENTS_ENDPOINTS.list, {
+          headers: {
+            Authorization: `Bearer ${user.token}`,
+          },
+        });
         if (res.ok) {
           const data = await res.json();
           const mapped = data.map((e) => ({
@@ -40,7 +53,7 @@ export default function CalendarPage() {
       }
     }
     loadEvents();
-  }, []);
+  }, [user]);
 
   return (
     <div className="calendar-page">
