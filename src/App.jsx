@@ -3,6 +3,7 @@ import { AuthProvider } from './auth.jsx';
 import TopBar from './components/TopBar';
 import Sidebar from './components/Sidebar';
 import AppRoutes from './router';
+
 import './App.css';
 
 export default function App() {
