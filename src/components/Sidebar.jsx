@@ -3,7 +3,7 @@ import './Sidebar.css';
 
 export default function Sidebar() {
   return (
-    <aside className="sidebar bg-warning p-3">
+    <aside className="sidebar p-3 text-dark">
       <nav className="nav flex-column">
         <Link className="nav-link text-dark" to="/">
           Home

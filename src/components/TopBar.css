@@ -1,6 +1,7 @@
 .topbar {
   display: flex;
   align-items: center;
+  background-color: #d2b48c;
 }
 
 .user-menu {
