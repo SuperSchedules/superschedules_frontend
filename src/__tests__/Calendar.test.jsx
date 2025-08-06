@@ -5,8 +5,13 @@ import CalendarPage from '../pages/Calendar.jsx';
 import { AuthContext } from '../auth.jsx';
 import { EVENTS_ENDPOINTS } from '../constants/api.js';
 
+const handlers = {};
+
 vi.mock('react-big-calendar', () => ({
-  Calendar: () => <div data-testid="calendar" />,
+  Calendar: (props) => {
+    Object.assign(handlers, props);
+    return <div data-testid="calendar" />;
+  },
   dateFnsLocalizer: () => () => {},
 }));
 
@@ -16,7 +21,7 @@ describe('Calendar page', () => {
   });
 
   it('fetches events and renders heading', async () => {
-    vi.spyOn(globalThis, 'fetch').mockResolvedValueOnce({
+    vi.spyOn(globalThis, 'fetch').mockResolvedValue({
       ok: true,
       json: () => Promise.resolve([]),
     });
@@ -32,9 +37,26 @@ describe('Calendar page', () => {
       expect(globalThis.fetch).toHaveBeenCalledTimes(1);
     });
 
-    expect(globalThis.fetch).toHaveBeenCalledWith(EVENTS_ENDPOINTS.list, {
+    const firstUrl = globalThis.fetch.mock.calls[0][0];
+    const parsed1 = new URL(firstUrl);
+    expect(parsed1.pathname).toBe(new URL(EVENTS_ENDPOINTS.list).pathname);
+    expect(parsed1.searchParams.get('start')).toBeTruthy();
+    expect(parsed1.searchParams.get('end')).toBeTruthy();
+    expect(globalThis.fetch.mock.calls[0][1]).toEqual({
       headers: { Authorization: 'Bearer test-token' },
     });
+
+    handlers.onNavigate(new Date('2025-02-01'));
+
+    await waitFor(() => {
+      expect(globalThis.fetch).toHaveBeenCalledTimes(2);
+    });
+
+    const secondUrl = globalThis.fetch.mock.calls[1][0];
+    const parsed2 = new URL(secondUrl);
+    expect(parsed2.searchParams.get('start')).not.toBe(
+      parsed1.searchParams.get('start'),
+    );
 
     globalThis.fetch.mockRestore();
   });

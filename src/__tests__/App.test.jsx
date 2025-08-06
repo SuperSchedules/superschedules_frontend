@@ -22,7 +22,7 @@ describe('App routing', () => {
 
   it('renders Calendar page', async () => {
     window.localStorage.setItem('token', 'test-token');
-    vi.spyOn(globalThis, 'fetch').mockResolvedValueOnce({
+    vi.spyOn(globalThis, 'fetch').mockResolvedValue({
       ok: true,
       json: () => Promise.resolve([]),
     });
@@ -32,7 +32,12 @@ describe('App routing', () => {
     await waitFor(() => {
       expect(globalThis.fetch).toHaveBeenCalledTimes(1);
     });
-    expect(globalThis.fetch).toHaveBeenCalledWith(EVENTS_ENDPOINTS.list, {
+    const url = globalThis.fetch.mock.calls[0][0];
+    const parsed = new URL(url);
+    expect(parsed.pathname).toBe(new URL(EVENTS_ENDPOINTS.list).pathname);
+    expect(parsed.searchParams.get('start')).toBeTruthy();
+    expect(parsed.searchParams.get('end')).toBeTruthy();
+    expect(globalThis.fetch.mock.calls[0][1]).toEqual({
       headers: { Authorization: 'Bearer test-token' },
     });
     globalThis.fetch.mockRestore();
