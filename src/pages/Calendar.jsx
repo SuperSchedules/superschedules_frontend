@@ -64,8 +64,8 @@ export default function CalendarPage() {
     })();
 
     const params = new URLSearchParams({
-      start: start.toISOString(),
-      end: end.toISOString(),
+      start: format(start, 'yyyy-MM-dd'),
+      end: format(end, 'yyyy-MM-dd'),
     });
 
     async function loadEvents() {
@@ -125,6 +125,17 @@ export default function CalendarPage() {
         onNavigate={(date) => setCurrentDate(date)}
         style={{ height: 500 }}
         onSelectEvent={(event) => setSelectedEvent(event)}
+        tooltipAccessor={(event) => {
+          const parts = [event.title];
+          if (event.description) parts.push(event.description);
+          if (event.location) parts.push(event.location);
+          if (event.start && event.end) {
+            parts.push(
+              `${format(event.start, 'Pp')} - ${format(event.end, 'Pp')}`,
+            );
+          }
+          return parts.join('\n');
+        }}
       />
       {selectedEvent && (
         <dialog open className="event-dialog">
