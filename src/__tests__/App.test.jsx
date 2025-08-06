@@ -17,7 +17,7 @@ describe('App routing', () => {
   it('renders About page', () => {
     window.history.pushState({}, '', '/about');
     render(<App />);
-    expect(screen.getByText(/about super schedules/i)).toBeInTheDocument();
+    expect(screen.getByText(/about superschedules/i)).toBeInTheDocument();
   });
 
   it('renders Calendar page', async () => {
