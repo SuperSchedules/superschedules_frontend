@@ -26,12 +26,12 @@ describe('TopBar', () => {
   });
 
   it('shows login when not authenticated', () => {
-    renderWithAuth(<TopBar />);
+    renderWithAuth(<TopBar onToggleSidebar={() => {}} />);
     expect(screen.getByText(/login/i)).toBeInTheDocument();
   });
 
   it('shows menu when authenticated', async () => {
-    renderWithAuth(<TopBar />, { user: { token: 'abc' } });
+    renderWithAuth(<TopBar onToggleSidebar={() => {}} />, { user: { token: 'abc' } });
     const button = await screen.findByRole('button', { name: /settings/i });
     fireEvent.click(button);
     expect(screen.getByText(/log out/i)).toBeInTheDocument();

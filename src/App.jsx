@@ -1,4 +1,5 @@
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import { useState } from 'react';
 import { AuthProvider } from './auth.jsx';
 import TopBar from './components/TopBar';
 import Sidebar from './components/Sidebar';
@@ -11,13 +12,15 @@ import Calendar from './pages/Calendar';
 import './App.css';
 
 export default function App() {
+  const [sidebarOpen, setSidebarOpen] = useState(true);
+
   return (
     <BrowserRouter>
       <AuthProvider>
         <div className="layout">
-          <TopBar />
+          <TopBar onToggleSidebar={() => setSidebarOpen((o) => !o)} />
           <div className="main">
-            <Sidebar />
+            {sidebarOpen && <Sidebar />}
             <div className="content">
               <Routes>
                 <Route path="/" element={<Home />} />
