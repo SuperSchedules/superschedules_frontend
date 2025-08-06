@@ -8,7 +8,7 @@ export default function TopBar({ onToggleSidebar }) {
   const [open, setOpen] = useState(false);
 
   return (
-    <header className="topbar navbar bg-warning px-3">
+    <header className="topbar navbar px-3 text-dark">
       <button
         className="btn btn-outline-dark me-2"
         aria-label="Toggle sidebar"
@@ -38,7 +38,7 @@ export default function TopBar({ onToggleSidebar }) {
           )}
         </div>
       ) : (
-        <Link className="ms-auto" to="/login">
+        <Link className="btn btn-outline-dark ms-auto fs-5" to="/login">
           Login
         </Link>
       )}
