@@ -1,6 +1,16 @@
-import { useEffect, useState, useRef } from 'react';
+import { useEffect, useState } from 'react';
 import { Calendar as BigCalendar, dateFnsLocalizer } from 'react-big-calendar';
-import { format, parse, startOfWeek, getDay } from 'date-fns';
+import {
+  format,
+  parse,
+  startOfWeek,
+  endOfWeek,
+  startOfMonth,
+  endOfMonth,
+  startOfDay,
+  endOfDay,
+  getDay,
+} from 'date-fns';
 import { enUS } from 'date-fns/locale';
 import 'react-big-calendar/lib/css/react-big-calendar.css';
 import './Calendar.css';
@@ -22,19 +32,39 @@ const localizer = dateFnsLocalizer({
 export default function CalendarPage() {
   const [events, setEvents] = useState([]);
   const [selectedEvent, setSelectedEvent] = useState(null);
+  const [currentView, setCurrentView] = useState('month');
+  const [currentDate, setCurrentDate] = useState(new Date());
 
   const { user } = useAuth();
-  const fetchedRef = useRef(false);
 
   useEffect(() => {
-    if (fetchedRef.current || !user?.token) {
+    if (!user?.token) {
       return;
     }
-    fetchedRef.current = true;
+
+    const { start, end } = (() => {
+      switch (currentView) {
+        case 'day':
+          return { start: startOfDay(currentDate), end: endOfDay(currentDate) };
+        case 'week':
+          return {
+            start: startOfWeek(currentDate, { weekStartsOn: 0 }),
+            end: endOfWeek(currentDate, { weekStartsOn: 0 }),
+          };
+        case 'month':
+        default:
+          return { start: startOfMonth(currentDate), end: endOfMonth(currentDate) };
+      }
+    })();
+
+    const params = new URLSearchParams({
+      start: start.toISOString(),
+      end: end.toISOString(),
+    });
 
     async function loadEvents() {
       try {
-        const res = await fetch(EVENTS_ENDPOINTS.list, {
+        const res = await fetch(`${EVENTS_ENDPOINTS.list}?${params.toString()}`, {
           headers: {
             Authorization: `Bearer ${user.token}`,
           },
@@ -43,8 +73,8 @@ export default function CalendarPage() {
           const data = await res.json();
           const mapped = data.map((e) => ({
             ...e,
-            start: new Date(e.start),
-            end: new Date(e.end),
+            start: new Date(e.start ?? e.start_time),
+            end: new Date(e.end ?? e.end_time),
           }));
           setEvents(mapped);
         }
@@ -52,8 +82,9 @@ export default function CalendarPage() {
         console.error('Failed to load events', err);
       }
     }
+
     loadEvents();
-  }, [user]);
+  }, [user, currentView, currentDate]);
 
   return (
     <div className="calendar-page">
@@ -64,6 +95,10 @@ export default function CalendarPage() {
         startAccessor="start"
         endAccessor="end"
         views={[ 'month', 'week', 'day' ]}
+        view={currentView}
+        date={currentDate}
+        onView={(view) => setCurrentView(view)}
+        onNavigate={(date) => setCurrentDate(date)}
         style={{ height: 500 }}
         onSelectEvent={(event) => setSelectedEvent(event)}
       />
