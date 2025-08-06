@@ -40,11 +40,23 @@ describe('Calendar page', () => {
     const firstUrl = globalThis.fetch.mock.calls[0][0];
     const parsed1 = new URL(firstUrl);
     expect(parsed1.pathname).toBe(new URL(EVENTS_ENDPOINTS.list).pathname);
-    expect(parsed1.searchParams.get('start')).toBeTruthy();
-    expect(parsed1.searchParams.get('end')).toBeTruthy();
+    expect(parsed1.searchParams.get('start')).toMatch(/^\d{4}-\d{2}-\d{2}$/);
+    expect(parsed1.searchParams.get('end')).toMatch(/^\d{4}-\d{2}-\d{2}$/);
     expect(globalThis.fetch.mock.calls[0][1]).toEqual({
       headers: { Authorization: 'Bearer test-token' },
     });
+
+    expect(typeof handlers.tooltipAccessor).toBe('function');
+    const tooltip = handlers.tooltipAccessor({
+      title: 'title',
+      description: 'desc',
+      location: 'room',
+      start: new Date('2024-01-01T10:00:00'),
+      end: new Date('2024-01-01T11:00:00'),
+    });
+    expect(tooltip).toContain('title');
+    expect(tooltip).toContain('desc');
+    expect(tooltip).toContain('room');
 
     handlers.onNavigate(new Date('2025-02-01'));
 
