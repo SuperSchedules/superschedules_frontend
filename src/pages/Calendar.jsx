@@ -34,6 +34,8 @@ export default function CalendarPage() {
   const [selectedEvent, setSelectedEvent] = useState(null);
   const [currentView, setCurrentView] = useState('month');
   const [currentDate, setCurrentDate] = useState(new Date());
+  const [rangeStart, setRangeStart] = useState('');
+  const [rangeEnd, setRangeEnd] = useState('');
 
   const { user } = useAuth();
 
@@ -43,6 +45,10 @@ export default function CalendarPage() {
     }
 
     const { start, end } = (() => {
+      if (rangeStart && rangeEnd) {
+        return { start: new Date(rangeStart), end: new Date(rangeEnd) };
+      }
+
       switch (currentView) {
         case 'day':
           return { start: startOfDay(currentDate), end: endOfDay(currentDate) };
@@ -84,11 +90,29 @@ export default function CalendarPage() {
     }
 
     loadEvents();
-  }, [user, currentView, currentDate]);
+  }, [user, currentView, currentDate, rangeStart, rangeEnd]);
 
   return (
     <div className="calendar-page">
       <h1>Calendar</h1>
+      <div className="range-controls">
+        <label>
+          Start
+          <input
+            type="date"
+            value={rangeStart}
+            onChange={(e) => setRangeStart(e.target.value)}
+          />
+        </label>
+        <label>
+          End
+          <input
+            type="date"
+            value={rangeEnd}
+            onChange={(e) => setRangeEnd(e.target.value)}
+          />
+        </label>
+      </div>
       <BigCalendar
         localizer={localizer}
         events={events}
