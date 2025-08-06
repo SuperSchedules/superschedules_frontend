@@ -6,7 +6,13 @@ import { describe, it, expect, afterEach, vi } from 'vitest';
 
 function renderWithAuth(ui, { user } = {}) {
   const value = user
-    ? { user, login: vi.fn(), logout: vi.fn(), refreshToken: vi.fn() }
+    ? {
+        user,
+        login: vi.fn(),
+        logout: vi.fn(),
+        refreshToken: vi.fn(),
+        authFetch: vi.fn(),
+      }
     : undefined;
   return render(
     <MemoryRouter>

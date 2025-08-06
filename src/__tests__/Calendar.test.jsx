@@ -25,8 +25,13 @@ describe('Calendar page', () => {
       ok: true,
       json: () => Promise.resolve([]),
     });
+    const authFetch = (url, options) =>
+      globalThis.fetch(url, {
+        ...options,
+        headers: { Authorization: 'Bearer test-token', ...(options?.headers || {}) },
+      });
     render(
-      <AuthContext.Provider value={{ user: { token: 'test-token' } }}>
+      <AuthContext.Provider value={{ user: { token: 'test-token' }, authFetch }}>
         <CalendarPage />
       </AuthContext.Provider>,
     );

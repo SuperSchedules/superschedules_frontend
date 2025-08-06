@@ -37,7 +37,7 @@ export default function CalendarPage() {
   const [rangeStart, setRangeStart] = useState('');
   const [rangeEnd, setRangeEnd] = useState('');
 
-  const { user } = useAuth();
+  const { user, authFetch } = useAuth();
 
   useEffect(() => {
     if (!user?.token) {
@@ -70,11 +70,9 @@ export default function CalendarPage() {
 
     async function loadEvents() {
       try {
-        const res = await fetch(`${EVENTS_ENDPOINTS.list}?${params.toString()}`, {
-          headers: {
-            Authorization: `Bearer ${user.token}`,
-          },
-        });
+        const res = await authFetch(
+          `${EVENTS_ENDPOINTS.list}?${params.toString()}`,
+        );
         if (res.ok) {
           const data = await res.json();
           const mapped = data.map((e) => ({
@@ -90,7 +88,7 @@ export default function CalendarPage() {
     }
 
     loadEvents();
-  }, [user, currentView, currentDate, rangeStart, rangeEnd]);
+  }, [user, authFetch, currentView, currentDate, rangeStart, rangeEnd]);
 
   return (
     <div className="calendar-page">
