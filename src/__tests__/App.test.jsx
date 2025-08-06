@@ -1,7 +1,12 @@
 import React from 'react';
 import { vi, describe, it, expect, afterEach } from 'vitest';
 vi.mock('react-big-calendar', () => ({
-  Calendar: () => <div>mock calendar</div>,
+  Calendar: ({ onRangeChange }) => {
+    React.useEffect(() => {
+      onRangeChange?.([ new Date('2025-01-01'), new Date('2025-01-31') ]);
+    }, [ onRangeChange ]);
+    return <div>mock calendar</div>;
+  },
   dateFnsLocalizer: () => () => {},
 }));
 import { render, screen, cleanup, waitFor } from '@testing-library/react';

@@ -4,7 +4,12 @@ import { describe, it, expect, afterEach, vi } from 'vitest';
 import CalendarPage from '../pages/Calendar.jsx';
 
 vi.mock('react-big-calendar', () => ({
-  Calendar: () => <div data-testid="calendar" />,
+  Calendar: ({ onRangeChange }) => {
+    React.useEffect(() => {
+      onRangeChange?.([ new Date('2025-01-01'), new Date('2025-01-31') ]);
+    }, [ onRangeChange ]);
+    return <div data-testid="calendar">mock calendar</div>;
+  },
   dateFnsLocalizer: () => () => {},
 }));
 
