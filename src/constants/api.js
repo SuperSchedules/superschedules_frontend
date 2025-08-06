@@ -14,6 +14,8 @@ export const AUTH_ENDPOINTS = {
   login: `${API_ROOT}/token/`,
   refresh: `${API_ROOT}/token/refresh/`,
   register: `${API_ROOT}/users/`,
+  reset: `${API_ROOT}/reset/`,
+  resetConfirm: `${API_ROOT}/reset/confirm/`,
 };
 
 export const EVENTS_ENDPOINTS = {
