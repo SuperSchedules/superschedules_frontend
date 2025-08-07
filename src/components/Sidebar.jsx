@@ -8,11 +8,11 @@ export default function Sidebar() {
         <Link className="nav-link text-dark" to="/">
           Home
         </Link>
-        <Link className="nav-link text-dark" to="/about">
-          About
-        </Link>
         <Link className="nav-link text-dark" to="/calendar">
           Calendar
+        </Link>
+        <Link className="nav-link text-dark" to="/about">
+          About
         </Link>
       </nav>
     </aside>

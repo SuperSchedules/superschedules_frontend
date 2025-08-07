@@ -21,3 +21,7 @@ export const AUTH_ENDPOINTS = {
 export const EVENTS_ENDPOINTS = {
   list: `${API_ROOT}/events/`,
 };
+
+export const SOURCES_ENDPOINTS = {
+  list: `${API_ROOT}/sources/`,
+};

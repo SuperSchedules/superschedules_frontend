@@ -1,0 +1,16 @@
+.submit-interface.disabled {
+  opacity: 0.5;
+  pointer-events: none;
+}
+
+.submit-form {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  max-width: 400px;
+}
+
+.submit-form label {
+  display: flex;
+  flex-direction: column;
+}
