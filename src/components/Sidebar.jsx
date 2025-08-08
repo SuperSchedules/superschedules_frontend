@@ -6,7 +6,7 @@ export default function Sidebar() {
     <aside className="sidebar p-3 text-dark">
       <nav className="nav flex-column">
         <Link className="nav-link text-dark" to="/">
-          Home
+          Scanner Control
         </Link>
         <Link className="nav-link text-dark" to="/calendar">
           Calendar
