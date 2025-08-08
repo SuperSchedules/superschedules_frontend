@@ -9,6 +9,11 @@ export default function Home() {
   const [url, setUrl] = useState('');
   const [name, setName] = useState('');
 
+  const truncateUrl = (str, length = 50) =>
+    str && str.length > length ? `${str.slice(0, length)}…` : str;
+
+  const formatDate = (d) => (d ? new Date(d).toLocaleDateString() : '');
+
   useEffect(() => {
     if (!user) return;
     async function loadSources() {
@@ -39,36 +44,51 @@ export default function Home() {
 
   return (
     <div>
-      <h1>Welcome!</h1>
+      <h1>Submit a new site to scan</h1>
       <div className={`submit-interface${user ? '' : ' disabled'}`}>
-        <form onSubmit={handleSubmit} className="submit-form">
-          <label>
-            URL
-            <input
-              type="url"
-              value={url}
-              onChange={(e) => setUrl(e.target.value)}
-              required
-            />
-          </label>
-          <label>
-            Name (optional)
-            <input
-              type="text"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-            />
-          </label>
-          <button type="submit">Submit</button>
-        </form>
-        <h2>Submitted Sites</h2>
-        <ul>
-          {sources.map((s) => (
-            <li key={s.id}>
-              {s.name ? `${s.name} - ${s.base_url}` : s.base_url}
-            </li>
-          ))}
-        </ul>
+        <div className="p-4 border rounded bg-warning-subtle mb-4">
+          <form onSubmit={handleSubmit} className="submit-form">
+            <label>
+              URL
+              <input
+                type="url"
+                value={url}
+                onChange={(e) => setUrl(e.target.value)}
+                required
+              />
+            </label>
+            <label>
+              Name (optional)
+              <input
+                type="text"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+              />
+            </label>
+            <button type="submit">Submit</button>
+          </form>
+        </div>
+        <div className="sources-box">
+          <h2>Submitted Sites</h2>
+          <table className="sources-table">
+            <thead>
+              <tr>
+                <th>Date</th>
+                <th>URL</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody>
+              {sources.map((s) => (
+                <tr key={s.id}>
+                  <td>{formatDate(s.created_at)}</td>
+                  <td title={s.base_url}>{truncateUrl(s.base_url)}</td>
+                  <td>{s.status || 'unknown'}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       </div>
       {!user && <p>Please log in to submit event links.</p>}
     </div>
