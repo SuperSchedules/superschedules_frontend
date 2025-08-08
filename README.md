@@ -1,15 +1,17 @@
 # Superschedules Frontend
 
-Superschedules is an AI-assisted event discovery tool. This React app talks to a Django API.
+Superschedules is an AI-assisted event discovery tool. The React frontend communicates with a Django API.
 
-- Vision: chat search, user-supplied sources, continuously updated events
-- Tech: Vite + React, Django + PostgreSQL, Terraform infrastructure
-- Repos: `superschedules_frontend`, `superschedules`, `superschedules_IAC`, `superschedules_collector` (planned)
+- **Vision:** chat-based search, user-supplied sources, continuously updated events
+- **Tech:** Vite + React, Django + PostgreSQL, Terraform infrastructure
+- **Repositories:** `superschedules_frontend`, `superschedules`, `superschedules_IAC`, `superschedules_collector` (planned)
 
 ## Local development
-1. `npm install`
-2. `npm run dev` -> http://localhost:5173
+
+1. Run `npm install`.
+2. Start the development server with `npm run dev` and visit http://localhost:5173.
 
 ## API configuration
-Endpoints: [`src/constants/api.js`](src/constants/api.js).
-Set `VITE_API_BASE_URL` and optional `VITE_API_VERSION` in `.env.development` or `.env.production`.
+
+Endpoints are defined in [`src/constants/api.js`](src/constants/api.js).
+Set `VITE_API_BASE_URL` and optionally `VITE_API_VERSION` in `.env.development` or `.env.production`.
