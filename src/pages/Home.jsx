@@ -13,11 +13,8 @@ export default function Home() {
     if (!user) return;
     async function loadSources() {
       try {
-        const res = await authFetch(SOURCES_ENDPOINTS.list);
-        if (res.ok) {
-          const data = await res.json();
-          setSources(data);
-        }
+        const res = await authFetch.get(SOURCES_ENDPOINTS.list);
+        setSources(res.data);
       } catch (err) {
         console.error('Failed to load sources', err);
       }
@@ -28,17 +25,13 @@ export default function Home() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      const res = await authFetch(SOURCES_ENDPOINTS.list, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ base_url: url, name }),
+      const res = await authFetch.post(SOURCES_ENDPOINTS.list, {
+        base_url: url,
+        name,
       });
-      if (res.ok) {
-        const data = await res.json();
-        setSources((prev) => [...prev, data]);
-        setUrl('');
-        setName('');
-      }
+      setSources((prev) => [...prev, res.data]);
+      setUrl('');
+      setName('');
     } catch (err) {
       console.error('Failed to submit source', err);
     }

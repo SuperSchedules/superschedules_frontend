@@ -70,18 +70,15 @@ export default function CalendarPage() {
 
     async function loadEvents() {
       try {
-        const res = await authFetch(
+        const res = await authFetch.get(
           `${EVENTS_ENDPOINTS.list}?${params.toString()}`,
         );
-        if (res.ok) {
-          const data = await res.json();
-          const mapped = data.map((e) => ({
-            ...e,
-            start: new Date(e.start ?? e.start_time),
-            end: new Date(e.end ?? e.end_time),
-          }));
-          setEvents(mapped);
-        }
+        const mapped = res.data.map((e) => ({
+          ...e,
+          start: new Date(e.start ?? e.start_time),
+          end: new Date(e.end ?? e.end_time),
+        }));
+        setEvents(mapped);
       } catch (err) {
         console.error('Failed to load events', err);
       }

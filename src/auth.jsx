@@ -7,6 +7,7 @@ import {
   useRef,
   useCallback,
 } from 'react';
+import axios from 'axios';
 import { AUTH_ENDPOINTS } from './constants/api.js';
 
 // Helper to decode a JWT and extract its payload. Returns null on failure.
@@ -149,14 +150,67 @@ export function AuthProvider({ children }) {
     return user.token;
   };
 
-  const authFetch = async (url, options = {}) => {
+  // Axios instance with interceptors to handle auth and refresh flow
+  const authFetch = axios.create();
+
+  let isRefreshing = false;
+  let failedQueue = [];
+
+  const processQueue = (error, token = null) => {
+    failedQueue.forEach((prom) => {
+      if (error) {
+        prom.reject(error);
+      } else {
+        prom.resolve(token);
+      }
+    });
+    failedQueue = [];
+  };
+
+  authFetch.interceptors.request.use(async (config) => {
     const token = await getValidToken();
-    const headers = {
-      ...(options.headers || {}),
+    config.headers = {
+      ...(config.headers || {}),
       Authorization: `Bearer ${token}`,
     };
-    return fetch(url, { ...options, headers });
-  };
+    return config;
+  });
+
+  authFetch.interceptors.response.use(
+    (response) => response,
+    async (error) => {
+      const originalRequest = error.config;
+      if (error.response?.status === 401 && !originalRequest._retry) {
+        if (isRefreshing) {
+          return new Promise((resolve, reject) => {
+            failedQueue.push({ resolve, reject });
+          })
+            .then((token) => {
+              originalRequest.headers.Authorization = `Bearer ${token}`;
+              originalRequest._retry = true;
+              return authFetch(originalRequest);
+            })
+            .catch(Promise.reject);
+        }
+
+        originalRequest._retry = true;
+        isRefreshing = true;
+        try {
+          const newToken = await refreshToken();
+          processQueue(null, newToken);
+          originalRequest.headers.Authorization = `Bearer ${newToken}`;
+          return authFetch(originalRequest);
+        } catch (err) {
+          processQueue(err, null);
+          logout();
+          return Promise.reject(err);
+        } finally {
+          isRefreshing = false;
+        }
+      }
+      return Promise.reject(error);
+    },
+  );
 
   return (
     <AuthContext.Provider
