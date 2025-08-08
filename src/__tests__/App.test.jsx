@@ -4,6 +4,28 @@ vi.mock('react-big-calendar', () => ({
   Calendar: () => <div>mock calendar</div>,
   dateFnsLocalizer: () => () => {},
 }));
+
+vi.mock('../auth.jsx', () => {
+  const mockAuthFetch = { get: vi.fn().mockResolvedValue({ data: [] }) };
+  const AuthContext = React.createContext(null);
+  const useAuth = () => React.useContext(AuthContext);
+  const AuthProvider = ({ children }) => (
+    <AuthContext.Provider
+      value={{
+        user: { token: 'test-token' },
+        authFetch: mockAuthFetch,
+        login: vi.fn(),
+        logout: vi.fn(),
+        refreshToken: vi.fn(),
+      }}
+    >
+      {children}
+    </AuthContext.Provider>
+  );
+  return { AuthProvider, AuthContext, useAuth, mockAuthFetch };
+});
+
+import { mockAuthFetch } from '../auth.jsx';
 import { render, screen, cleanup, waitFor } from '@testing-library/react';
 import App from '../App';
 import { EVENTS_ENDPOINTS } from '../constants/api.js';
@@ -22,24 +44,17 @@ describe('App routing', () => {
 
   it('renders Calendar page', async () => {
     window.localStorage.setItem('token', 'test-token');
-    vi.spyOn(globalThis, 'fetch').mockResolvedValue({
-      ok: true,
-      json: () => Promise.resolve([]),
-    });
     window.history.pushState({}, '', '/calendar');
     render(<App />);
     expect(screen.getByRole('heading', { name: /calendar/i })).toBeInTheDocument();
     await waitFor(() => {
-      expect(globalThis.fetch).toHaveBeenCalledTimes(1);
+      expect(mockAuthFetch.get).toHaveBeenCalledTimes(1);
     });
-    const url = globalThis.fetch.mock.calls[0][0];
+    const url = mockAuthFetch.get.mock.calls[0][0];
     const parsed = new URL(url);
     expect(parsed.pathname).toBe(new URL(EVENTS_ENDPOINTS.list).pathname);
     expect(parsed.searchParams.get('start')).toBeTruthy();
     expect(parsed.searchParams.get('end')).toBeTruthy();
-    expect(globalThis.fetch.mock.calls[0][1]).toEqual({
-      headers: { Authorization: 'Bearer test-token' },
-    });
-    globalThis.fetch.mockRestore();
+    expect(mockAuthFetch.get.mock.calls[0][1]).toBeUndefined();
   });
 });
