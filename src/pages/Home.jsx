@@ -73,7 +73,8 @@ export default function Home() {
           <table className="sources-table">
             <thead>
               <tr>
-                <th>Date</th>
+                <th>Date Added</th>
+                <th>Last Run</th>
                 <th>URL</th>
                 <th>Status</th>
               </tr>
@@ -81,9 +82,10 @@ export default function Home() {
             <tbody>
               {sources.map((s) => (
                 <tr key={s.id}>
-                  <td>{formatDate(s.created_at)}</td>
+                  <td>{formatDate(s.date_added)}</td>
+                  <td>{formatDate(s.last_run_at)}</td>
                   <td title={s.base_url}>{truncateUrl(s.base_url)}</td>
-                  <td>{s.status || 'unknown'}</td>
+                  <td>{s.status || 'not run'}</td>
                 </tr>
               ))}
             </tbody>
