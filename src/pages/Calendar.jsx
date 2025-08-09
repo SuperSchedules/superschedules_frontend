@@ -73,10 +73,20 @@ export default function CalendarPage() {
         const res = await authFetch.get(
           `${EVENTS_ENDPOINTS.list}?${params.toString()}`,
         );
+        const combineDateTime = (date, time) => {
+          if (!date && !time) return undefined;
+          const dateStr = date || '';
+          const timeStr = time || '';
+          // If date already has time information, use it directly
+          if (dateStr && dateStr.includes('T')) return new Date(dateStr);
+          // Otherwise, combine date and time into an ISO string
+          return new Date(`${dateStr}${timeStr ? `T${timeStr}` : ''}`);
+        };
+
         const mapped = res.data.map((e) => ({
           ...e,
-          start: new Date(e.start ?? e.start_time),
-          end: new Date(e.end ?? e.end_time),
+          start: combineDateTime(e.start, e.start_time),
+          end: combineDateTime(e.end, e.end_time),
         }));
         setEvents(mapped);
       } catch (err) {
