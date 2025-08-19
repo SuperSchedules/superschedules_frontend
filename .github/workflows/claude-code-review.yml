@@ -4,11 +4,15 @@ on:
   pull_request:
     types: [opened, synchronize]
     # Optional: Only run on specific file changes
-    # paths:
-    #   - "src/**/*.ts"
-    #   - "src/**/*.tsx"
-    #   - "src/**/*.js"
-    #   - "src/**/*.jsx"
+    paths:
+      - "src/**/*.js"
+      - "src/**/*.jsx"
+      - "src/**/*.css"
+      - "src/**/*.json"
+      - "package.json"
+      - "vite.config.js"
+      - "vitest.setup.js"
+
 
 jobs:
   claude-review:
@@ -33,7 +37,8 @@ jobs:
 
       - name: Run Claude Code Review
         id: claude-review
-        uses: anthropics/claude-code-action@beta
+
+        uses: anthropics/claude-code-action@v0.0.60
         with:
           anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
 
@@ -43,36 +48,34 @@ jobs:
           # Direct prompt for automated review (no @claude mention needed)
           direct_prompt: |
             Please review this pull request and provide feedback on:
-            - Code quality and best practices
-            - Potential bugs or issues
+
+            - React/JavaScript code quality and best practices
+            - Component structure and reusability
+            - State management patterns
+            - Authentication and security considerations
+            - CSS styling and responsive design
+            - Test coverage and quality
             - Performance considerations
-            - Security concerns
-            - Test coverage
+            - Accessibility compliance
+            
+            Focus especially on:
+            - For React components: Proper hooks usage, component lifecycle, and props handling
+            - For API integration: Axios usage, error handling, and authentication flow
+            - For authentication: JWT handling, token refresh, and security best practices
+            - For styling: Bootstrap integration and responsive design
             
             Be constructive and helpful in your feedback.
 
           # Optional: Use sticky comments to make Claude reuse the same comment on subsequent pushes to the same PR
-          # use_sticky_comment: true
-          
-          # Optional: Customize review based on file types
-          # direct_prompt: |
-          #   Review this PR focusing on:
-          #   - For TypeScript files: Type safety and proper interface usage
-          #   - For API endpoints: Security, input validation, and error handling
-          #   - For React components: Performance, accessibility, and best practices
-          #   - For tests: Coverage, edge cases, and test quality
-          
-          # Optional: Different prompts for different authors
-          # direct_prompt: |
-          #   ${{ github.event.pull_request.author_association == 'FIRST_TIME_CONTRIBUTOR' && 
-          #   'Welcome! Please review this PR from a first-time contributor. Be encouraging and provide detailed explanations for any suggestions.' ||
-          #   'Please provide a thorough code review focusing on our coding standards and best practices.' }}
+
+          use_sticky_comment: true
           
           # Optional: Add specific tools for running tests or linting
-          # allowed_tools: "Bash(npm run test),Bash(npm run lint),Bash(npm run typecheck)"
-          
+          allowed_tools: "Bash(pnpm run test),Bash(pnpm run lint),Bash(pnpm run build)"
+
           # Optional: Skip review for certain conditions
           # if: |
           #   !contains(github.event.pull_request.title, '[skip-review]') &&
+
           #   !contains(github.event.pull_request.title, '[WIP]')
 
