@@ -36,8 +36,9 @@ export default function CreateUser() {
     <div className="container mt-4">
       <form
         onSubmit={handleSubmit}
-        className="p-4 border rounded bg-warning-subtle"
+        className="auth-form p-4 border rounded"
       >
+        <h2>Create Account</h2>
         <div className="mb-3">
           <label className="form-label">
             First name

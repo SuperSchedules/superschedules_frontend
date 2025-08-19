@@ -1,5 +1,7 @@
 .about-page {
-  border: 2px solid #b35c00;
+  border: 2px solid var(--primary-color);
   border-radius: 8px;
   padding: 1rem;
+  background-color: var(--card-bg-color);
+  color: var(--text-color);
 }
