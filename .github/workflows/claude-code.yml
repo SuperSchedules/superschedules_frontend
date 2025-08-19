@@ -14,6 +14,6 @@ jobs:
     steps:
       - name: Run Claude Code
         id: claude
-        uses: anthropics/claude-code-action@v1
+        uses: anthropics/claude-code-action@v0.0.60
         with:
           anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
