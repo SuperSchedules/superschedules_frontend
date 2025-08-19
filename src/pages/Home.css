@@ -1,24 +1,60 @@
+.home-page {
+  color: var(--text-color);
+}
+
+.home-page h1 {
+  color: var(--text-color);
+  margin-bottom: 1.5rem;
+}
+
+.home-page h2 {
+  color: var(--text-color);
+  margin-bottom: 1rem;
+}
+
 .submit-interface.disabled {
   opacity: 0.5;
   pointer-events: none;
 }
 
+/* Scan form styling */
+.scan-form {
+  background-color: var(--card-bg-color);
+  border-color: var(--card-border-color);
+  color: var(--text-color);
+  max-width: 500px;
+}
+
 .submit-form {
   display: flex;
   flex-direction: column;
-  gap: 0.5rem;
+  gap: 1rem;
   max-width: 400px;
 }
 
-.submit-form label {
-  display: flex;
-  flex-direction: column;
+.submit-form .form-label {
+  color: var(--text-color);
+  font-weight: 500;
+  margin-bottom: 0.5rem;
+}
+
+.submit-form .btn-primary {
+  background-color: var(--primary-color);
+  border-color: var(--primary-color);
+  align-self: flex-start;
+}
+
+.submit-form .btn-primary:hover {
+  background-color: var(--link-hover-color);
+  border-color: var(--link-hover-color);
 }
 
 .sources-box {
   padding: 1rem;
-  border: 1px solid #ccc;
+  border: 1px solid var(--border-color);
   border-radius: 0.25rem;
+  background-color: var(--card-bg-color);
+  color: var(--text-color);
 }
 
 .sources-table {
@@ -33,9 +69,14 @@
 }
 
 .sources-table tbody tr:nth-child(odd) {
-  background-color: #fdf5e6;
+  background-color: var(--hover-bg-color);
 }
 
 .sources-table tbody tr:nth-child(even) {
-  background-color: #f5e9da;
+  background-color: var(--card-bg-color);
+}
+
+.sources-table th,
+.sources-table td {
+  color: var(--text-color);
 }

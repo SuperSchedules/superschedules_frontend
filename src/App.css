@@ -2,6 +2,9 @@
   display: flex;
   flex-direction: column;
   height: 100vh;
+  background-color: var(--bg-color);
+  color: var(--text-color);
+  transition: background-color 0.2s ease-in-out, color 0.2s ease-in-out;
 }
 
 .main {
@@ -12,4 +15,120 @@
 .content {
   flex: 1;
   padding: 1rem;
+  background-color: var(--content-bg-color);
+  color: var(--text-color);
+  transition: background-color 0.2s ease-in-out, color 0.2s ease-in-out;
+}
+
+/* Override Bootstrap styles for dark mode */
+.btn-outline {
+  border-color: var(--border-color);
+  color: var(--text-color);
+}
+
+.btn-outline:hover {
+  background-color: var(--hover-bg-color);
+  border-color: var(--hover-border-color);
+  color: var(--text-color);
+}
+
+/* Card styles for dark mode */
+.card {
+  background-color: var(--card-bg-color);
+  border-color: var(--card-border-color);
+  color: var(--text-color);
+}
+
+/* Form styles for dark mode */
+.form-control {
+  background-color: var(--card-bg-color);
+  border-color: var(--border-color);
+  color: var(--text-color);
+}
+
+.form-control:focus {
+  background-color: var(--card-bg-color);
+  border-color: var(--primary-color);
+  color: var(--text-color);
+  box-shadow: 0 0 0 0.2rem rgba(179, 92, 0, 0.25);
+}
+
+[data-theme="dark"] .form-control:focus {
+  box-shadow: 0 0 0 0.2rem rgba(255, 165, 0, 0.25);
+}
+
+/* Authentication forms */
+.auth-form {
+  background-color: var(--card-bg-color);
+  border-color: var(--card-border-color);
+  color: var(--text-color);
+  max-width: 500px;
+  margin: 0 auto;
+}
+
+.auth-form h2 {
+  color: var(--text-color);
+  margin-bottom: 1.5rem;
+}
+
+.auth-form .form-label {
+  color: var(--text-color);
+  font-weight: 500;
+}
+
+/* Button styling for auth forms */
+.auth-form .btn-primary {
+  background-color: var(--primary-color);
+  border-color: var(--primary-color);
+}
+
+.auth-form .btn-primary:hover {
+  background-color: var(--link-hover-color);
+  border-color: var(--link-hover-color);
+}
+
+.auth-form .btn-secondary {
+  background-color: var(--menu-bg-color);
+  border-color: var(--border-color);
+  color: var(--text-color);
+}
+
+.auth-form .btn-secondary:hover {
+  background-color: var(--hover-bg-color);
+  border-color: var(--hover-border-color);
+  color: var(--text-color);
+}
+
+.auth-form .btn-outline-secondary {
+  border-color: var(--border-color);
+  color: var(--text-color);
+}
+
+.auth-form .btn-outline-secondary:hover {
+  background-color: var(--hover-bg-color);
+  border-color: var(--hover-border-color);
+  color: var(--text-color);
+}
+
+/* Alert styling for auth forms */
+.auth-form .alert-danger {
+  background-color: rgba(220, 53, 69, 0.1);
+  border-color: rgba(220, 53, 69, 0.2);
+  color: var(--text-color);
+}
+
+.auth-form .alert-info {
+  background-color: rgba(13, 202, 240, 0.1);
+  border-color: rgba(13, 202, 240, 0.2);
+  color: var(--text-color);
+}
+
+[data-theme="dark"] .auth-form .alert-danger {
+  background-color: rgba(220, 53, 69, 0.2);
+  border-color: rgba(220, 53, 69, 0.3);
+}
+
+[data-theme="dark"] .auth-form .alert-info {
+  background-color: rgba(13, 202, 240, 0.2);
+  border-color: rgba(13, 202, 240, 0.3);
 }

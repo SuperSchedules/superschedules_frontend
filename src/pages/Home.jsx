@@ -43,29 +43,35 @@ export default function Home() {
   };
 
   return (
-    <div>
+    <div className="home-page">
       <h1>Submit a new site to scan</h1>
       <div className={`submit-interface${user ? '' : ' disabled'}`}>
-        <div className="p-4 border rounded bg-warning-subtle mb-4">
+        <div className="scan-form p-4 border rounded mb-4">
           <form onSubmit={handleSubmit} className="submit-form">
-            <label>
+            <label className="form-label">
               URL
               <input
                 type="url"
+                className="form-control"
                 value={url}
                 onChange={(e) => setUrl(e.target.value)}
+                placeholder="https://example.com"
                 required
               />
             </label>
-            <label>
+            <label className="form-label">
               Name (optional)
               <input
                 type="text"
+                className="form-control"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
+                placeholder="Friendly name for this source"
               />
             </label>
-            <button type="submit">Submit</button>
+            <button type="submit" className="btn btn-primary">
+              Submit Site
+            </button>
           </form>
         </div>
         <div className="sources-box">
