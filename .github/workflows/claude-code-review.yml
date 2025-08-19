@@ -1,0 +1,75 @@
+name: Claude Code Review
+
+on:
+  pull_request:
+    types: [opened, synchronize]
+    # Optional: Only run on specific file changes
+    paths:
+      - "src/**/*.js"
+      - "src/**/*.jsx"
+      - "src/**/*.css"
+      - "src/**/*.json"
+      - "package.json"
+      - "vite.config.js"
+      - "vitest.setup.js"
+
+jobs:
+  claude-review:
+    # Optional: Filter by PR author
+    # if: |
+    #   github.event.pull_request.user.login == 'external-contributor' ||
+    #   github.event.pull_request.user.login == 'new-developer' ||
+    #   github.event.pull_request.author_association == 'FIRST_TIME_CONTRIBUTOR'
+    
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: read
+      issues: read
+      id-token: write
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      - name: Run Claude Code Review
+        id: claude-review
+        uses: anthropics/claude-code-action@v1
+        with:
+          anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
+
+          # Optional: Specify model (defaults to Claude Sonnet 4, uncomment for Claude Opus 4.1)
+          # model: "claude-opus-4-1-20250805"
+
+          # Direct prompt for automated review (no @claude mention needed)
+          direct_prompt: |
+            Please review this pull request and provide feedback on:
+            - React/JavaScript code quality and best practices
+            - Component structure and reusability
+            - State management patterns
+            - Authentication and security considerations
+            - CSS styling and responsive design
+            - Test coverage and quality
+            - Performance considerations
+            - Accessibility compliance
+            
+            Focus especially on:
+            - For React components: Proper hooks usage, component lifecycle, and props handling
+            - For API integration: Axios usage, error handling, and authentication flow
+            - For authentication: JWT handling, token refresh, and security best practices
+            - For styling: Bootstrap integration and responsive design
+            
+            Be constructive and helpful in your feedback.
+
+          # Optional: Use sticky comments to make Claude reuse the same comment on subsequent pushes to the same PR
+          use_sticky_comment: true
+          
+          # Optional: Add specific tools for running tests or linting
+          allowed_tools: "Bash(pnpm run test),Bash(pnpm run lint),Bash(pnpm run build)"
+          
+          # Optional: Skip review for certain conditions
+          # if: |
+          #   !contains(github.event.pull_request.title, '[skip-review]') &&
+          #   !contains(github.event.pull_request.title, '[WIP]')
