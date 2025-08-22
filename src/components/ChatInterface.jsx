@@ -21,6 +21,7 @@ export default function ChatInterface({
   ]);
   const [inputMessage, setInputMessage] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [sessionId, setSessionId] = useState(null);
   const messagesEndRef = useRef(null);
   const { authFetch } = useAuth();
   const [chatService] = useState(() => new ChatService(authFetch));
@@ -53,10 +54,17 @@ export default function ChatInterface({
       const response = await chatService.sendMessage(userMessage.content, {
         // Add any relevant context
         location: null, // Could be extracted from user preferences
-        preferences: {}
+        preferences: {},
+        session_id: sessionId,
+        clear_suggestions: false // Could be determined by user intent analysis
       });
 
       if (response.success) {
+        // Update session ID if provided
+        if (response.data.sessionId) {
+          setSessionId(response.data.sessionId);
+        }
+
         const assistantMessage = {
           id: response.data.id,
           type: 'assistant',
@@ -66,6 +74,11 @@ export default function ChatInterface({
         };
 
         setMessages(prev => [...prev, assistantMessage]);
+        
+        // Clear previous suggestions if the response indicates a topic change
+        if (response.data.clearPreviousSuggestions) {
+          onSuggestedEvents([]);
+        }
         
         // Fetch and update suggested events if we have event IDs
         if (response.data.suggestedEventIds && response.data.suggestedEventIds.length > 0) {
@@ -108,6 +121,9 @@ export default function ChatInterface({
               onSuggestionsLoading && onSuggestionsLoading(false);
             }
           }
+        } else if (response.data.clearPreviousSuggestions) {
+          // Clear suggestions even if no new ones are provided
+          onSuggestedEvents([]);
         }
         
         // Add follow-up questions as separate messages if they exist

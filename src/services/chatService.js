@@ -10,11 +10,13 @@ export class ChatService {
       const payload = {
         message: message.trim(),
         context: {
-          currentDate: new Date().toISOString(),
+          current_date: new Date().toISOString(),
           location: context.location || null,
           preferences: context.preferences || {},
           ...context
-        }
+        },
+        session_id: context.session_id || null,
+        clear_suggestions: context.clear_suggestions || false
       };
 
       const response = await this.authFetch.post(CHAT_ENDPOINTS.message, payload);
@@ -26,6 +28,8 @@ export class ChatService {
           content: response.data.response || response.data.content,
           suggestedEventIds: response.data.suggested_event_ids || [],
           followUpQuestions: response.data.follow_up_questions || [],
+          sessionId: response.data.session_id,
+          clearPreviousSuggestions: response.data.clear_previous_suggestions || false,
           timestamp: new Date(response.data.timestamp || Date.now())
         }
       };
