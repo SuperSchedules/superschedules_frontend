@@ -24,13 +24,28 @@ export class ChatService {
       return {
         success: true,
         data: {
-          id: response.data.id || Date.now(),
-          content: response.data.response || response.data.content,
-          suggestedEventIds: response.data.suggested_event_ids || [],
-          followUpQuestions: response.data.follow_up_questions || [],
+          id: Date.now(),
+          modelA: {
+            modelName: response.data.model_a.model_name,
+            content: response.data.model_a.response,
+            responseTimeMs: response.data.model_a.response_time_ms,
+            success: response.data.model_a.success,
+            error: response.data.model_a.error,
+            suggestedEventIds: response.data.model_a.suggested_event_ids || [],
+            followUpQuestions: response.data.model_a.follow_up_questions || []
+          },
+          modelB: {
+            modelName: response.data.model_b.model_name,
+            content: response.data.model_b.response,
+            responseTimeMs: response.data.model_b.response_time_ms,
+            success: response.data.model_b.success,
+            error: response.data.model_b.error,
+            suggestedEventIds: response.data.model_b.suggested_event_ids || [],
+            followUpQuestions: response.data.model_b.follow_up_questions || []
+          },
           sessionId: response.data.session_id,
           clearPreviousSuggestions: response.data.clear_previous_suggestions || false,
-          timestamp: new Date(response.data.timestamp || Date.now())
+          timestamp: new Date()
         }
       };
     } catch (error) {
@@ -153,9 +168,26 @@ export class ChatService {
       success: true,
       data: {
         id: Date.now(),
-        content: responseText,
-        suggestedEventIds: mockEventIds,
-        followUpQuestions: followUpQuestions.slice(0, 2), // Limit to 2 questions
+        modelA: {
+          modelName: 'mock-model-a',
+          content: responseText,
+          responseTimeMs: Math.floor(Math.random() * 2000) + 500, // Random 500-2500ms
+          success: true,
+          error: null,
+          suggestedEventIds: mockEventIds,
+          followUpQuestions: followUpQuestions.slice(0, 2)
+        },
+        modelB: {
+          modelName: 'mock-model-b',
+          content: responseText + ' (This is a slightly different response from model B for comparison.)',
+          responseTimeMs: Math.floor(Math.random() * 3000) + 800, // Random 800-3800ms  
+          success: true,
+          error: null,
+          suggestedEventIds: mockEventIds,
+          followUpQuestions: followUpQuestions.slice(0, 1) // Different follow-ups
+        },
+        sessionId: null,
+        clearPreviousSuggestions: false,
         timestamp: new Date()
       }
     };

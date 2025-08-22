@@ -16,7 +16,7 @@ import 'react-big-calendar/lib/css/react-big-calendar.css';
 import './Calendar.css';
 import { EVENTS_ENDPOINTS } from '../constants/api.js';
 import { useAuth } from '../auth.jsx';
-import ChatInterface from '../components/ChatInterface.jsx';
+import DualChatInterface from '../components/DualChatInterface.jsx';
 
 const locales = {
   'en-US': enUS,
@@ -133,7 +133,7 @@ export default function CalendarPage() {
           className="chat-toggle"
           onClick={() => setShowChat(!showChat)}
         >
-          {showChat ? 'Hide Chat' : 'Show Chat'}
+          {showChat ? 'Hide A/B Chat' : 'Show A/B Chat'}
         </button>
       </div>
       
@@ -194,7 +194,7 @@ export default function CalendarPage() {
         
         {showChat && (
           <div className="chat-section">
-            <ChatInterface
+            <DualChatInterface
               onSuggestedEvents={handleSuggestedEvents}
               onSuggestionsLoading={handleSuggestionsLoading}
               onCalendarUpdate={handleCalendarUpdate}
