@@ -25,3 +25,8 @@ export const EVENTS_ENDPOINTS = {
 export const SOURCES_ENDPOINTS = {
   list: `${API_ROOT}/sources/`,
 };
+
+export const CHAT_ENDPOINTS = {
+  message: `${API_ROOT}/chat/`,
+  suggestions: `${API_ROOT}/chat/suggestions/`,
+};

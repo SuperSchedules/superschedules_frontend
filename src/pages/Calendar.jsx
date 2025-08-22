@@ -16,6 +16,7 @@ import 'react-big-calendar/lib/css/react-big-calendar.css';
 import './Calendar.css';
 import { EVENTS_ENDPOINTS } from '../constants/api.js';
 import { useAuth } from '../auth.jsx';
+import ChatInterface from '../components/ChatInterface.jsx';
 
 const locales = {
   'en-US': enUS,
@@ -36,6 +37,9 @@ export default function CalendarPage() {
   const [currentDate, setCurrentDate] = useState(new Date());
   const [rangeStart, setRangeStart] = useState('');
   const [rangeEnd, setRangeEnd] = useState('');
+  const [suggestedEvents, setSuggestedEvents] = useState([]);
+  const [showChat, setShowChat] = useState(true);
+  const [loadingSuggestions, setLoadingSuggestions] = useState(false);
 
   const { user, authFetch } = useAuth();
 
@@ -97,55 +101,122 @@ export default function CalendarPage() {
     loadEvents();
   }, [user, authFetch, currentView, currentDate, rangeStart, rangeEnd]);
 
+  const handleSuggestedEvents = (newSuggestedEvents) => {
+    setSuggestedEvents(newSuggestedEvents);
+    setLoadingSuggestions(false);
+    // Note: We don't merge here anymore since we use displayEvents computed property
+  };
+
+  const handleSuggestionsLoading = (isLoading) => {
+    setLoadingSuggestions(isLoading);
+    if (isLoading) {
+      setSuggestedEvents([]); // Clear previous suggestions while loading new ones
+    }
+  };
+
+  const handleCalendarUpdate = (event) => {
+    // Navigate to the event's date and highlight it
+    if (event.start) {
+      setCurrentDate(new Date(event.start));
+      setSelectedEvent(event);
+    }
+  };
+
+  // Combine regular events with suggested events for display
+  const displayEvents = [...events, ...suggestedEvents];
+
   return (
     <div className="calendar-page">
-      <h1>Calendar</h1>
-      <div className="range-controls">
-        <label>
-          Start
-          <input
-            type="date"
-            value={rangeStart}
-            onChange={(e) => setRangeStart(e.target.value)}
-          />
-        </label>
-        <label>
-          End
-          <input
-            type="date"
-            value={rangeEnd}
-            onChange={(e) => setRangeEnd(e.target.value)}
-          />
-        </label>
+      <div className="calendar-header">
+        <h1>Calendar</h1>
+        <button 
+          className="chat-toggle"
+          onClick={() => setShowChat(!showChat)}
+        >
+          {showChat ? 'Hide Chat' : 'Show Chat'}
+        </button>
       </div>
-      <BigCalendar
-        localizer={localizer}
-        events={events}
-        startAccessor="start"
-        endAccessor="end"
-        views={[ 'month', 'week', 'day' ]}
-        view={currentView}
-        date={currentDate}
-        onView={(view) => setCurrentView(view)}
-        onNavigate={(date) => setCurrentDate(date)}
-        style={{ height: 500 }}
-        onSelectEvent={(event) => setSelectedEvent(event)}
-        tooltipAccessor={(event) => {
-          const parts = [event.title];
-          if (event.description) parts.push(event.description);
-          if (event.location) parts.push(event.location);
-          if (event.start && event.end) {
-            parts.push(
-              `${format(event.start, 'Pp')} - ${format(event.end, 'Pp')}`,
-            );
-          }
-          return parts.join('\n');
-        }}
-      />
+      
+      <div className={`calendar-layout ${showChat ? 'with-chat' : 'full-width'}`}>
+        <div className="calendar-section">
+          <div className="range-controls">
+            <label>
+              Start
+              <input
+                type="date"
+                value={rangeStart}
+                onChange={(e) => setRangeStart(e.target.value)}
+              />
+            </label>
+            <label>
+              End
+              <input
+                type="date"
+                value={rangeEnd}
+                onChange={(e) => setRangeEnd(e.target.value)}
+              />
+            </label>
+          </div>
+          <BigCalendar
+            localizer={localizer}
+            events={displayEvents}
+            startAccessor="start"
+            endAccessor="end"
+            views={[ 'month', 'week', 'day' ]}
+            view={currentView}
+            date={currentDate}
+            onView={(view) => setCurrentView(view)}
+            onNavigate={(date) => setCurrentDate(date)}
+            style={{ height: 500 }}
+            onSelectEvent={(event) => setSelectedEvent(event)}
+            eventPropGetter={(event) => ({
+              className: event.suggested ? 'suggested-event' : '',
+              style: event.suggested ? {
+                backgroundColor: '#28a745',
+                border: '2px solid #1e7e34',
+                opacity: 0.8
+              } : {}
+            })}
+            tooltipAccessor={(event) => {
+              const parts = [event.title];
+              if (event.suggested) parts.push('💡 AI Suggested');
+              if (event.description) parts.push(event.description);
+              if (event.location) parts.push(event.location);
+              if (event.start && event.end) {
+                parts.push(
+                  `${format(event.start, 'Pp')} - ${format(event.end, 'Pp')}`,
+                );
+              }
+              return parts.join('\n');
+            }}
+          />
+        </div>
+        
+        {showChat && (
+          <div className="chat-section">
+            <ChatInterface
+              onSuggestedEvents={handleSuggestedEvents}
+              onSuggestionsLoading={handleSuggestionsLoading}
+              onCalendarUpdate={handleCalendarUpdate}
+              suggestedEvents={suggestedEvents}
+              loadingSuggestions={loadingSuggestions}
+              isVisible={showChat}
+            />
+          </div>
+        )}
+      </div>
+      
       {selectedEvent && (
         <dialog open className="event-dialog">
           <h2>{selectedEvent.title}</h2>
+          {selectedEvent.suggested && (
+            <div className="suggested-badge">💡 AI Suggested Event</div>
+          )}
           {selectedEvent.description && <p>{selectedEvent.description}</p>}
+          {selectedEvent.location && <p><strong>Location:</strong> {selectedEvent.location}</p>}
+          {selectedEvent.start && (
+            <p><strong>Date:</strong> {format(new Date(selectedEvent.start), 'PPp')}</p>
+          )}
           <button onClick={() => setSelectedEvent(null)}>Close</button>
         </dialog>
       )}
