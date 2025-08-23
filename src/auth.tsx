@@ -56,7 +56,9 @@ interface AuthContextType {
 // Helper to decode a JWT and extract its payload. Returns null on failure.
 function parseJwt(token: string): TokenPayload | null {
   try {
-    const tokenParts = token.split('.');\n    if (tokenParts.length < 2) return null;\n    const base64Url = tokenParts[1];
+    const tokenParts = token.split('.');
+    if (tokenParts.length < 2) return null;
+    const base64Url = tokenParts[1];
     const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
     const jsonPayload = decodeURIComponent(
       atob(base64)
