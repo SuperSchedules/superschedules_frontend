@@ -225,12 +225,11 @@ export class ChatService {
   }
 
   generateMockEventIds(ages: number[] | null, location: string, timeframe: string): string[] {
-    // In development, return mock event IDs that would come from your RAG system
+    // In development, return numeric event IDs that match the backend's integer format
     // These would be actual event IDs from your PostgreSQL database in production
     
     const availableEventIds = [
-      'event-001', 'event-002', 'event-003', 'event-004', 'event-005',
-      'event-006', 'event-007', 'event-008', 'event-009', 'event-010'
+      '1', '2', '3', '4', '5', '6', '7', '8', '9', '10'
     ];
     
     // Simulate filtering logic that would happen in your RAG system
