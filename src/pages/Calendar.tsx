@@ -14,8 +14,8 @@ import {
 import { enUS } from 'date-fns/locale';
 import 'react-big-calendar/lib/css/react-big-calendar.css';
 import './Calendar.css';
-import { EVENTS_ENDPOINTS } from '../constants/api.js';
-import { useAuth } from '../auth.jsx';
+import { EVENTS_ENDPOINTS } from '../constants/api';
+import { useAuth } from '../auth';
 
 const locales = {
   'en-US': enUS,
@@ -29,11 +29,23 @@ const localizer = dateFnsLocalizer({
   locales,
 });
 
+interface EventItem {
+  id: number;
+  title: string;
+  description?: string;
+  location?: string;
+  start?: Date;
+  end?: Date;
+  start_time?: string;
+  end_time?: string;
+  [key: string]: any;
+}
+
 export default function CalendarPage() {
-  const [events, setEvents] = useState([]);
-  const [selectedEvent, setSelectedEvent] = useState(null);
-  const [currentView, setCurrentView] = useState('month');
-  const [currentDate, setCurrentDate] = useState(new Date());
+  const [events, setEvents] = useState<EventItem[]>([]);
+  const [selectedEvent, setSelectedEvent] = useState<EventItem | null>(null);
+  const [currentView, setCurrentView] = useState<'month' | 'week' | 'day'>('month');
+  const [currentDate, setCurrentDate] = useState<Date>(new Date());
   const [rangeStart, setRangeStart] = useState('');
   const [rangeEnd, setRangeEnd] = useState('');
 
@@ -73,20 +85,18 @@ export default function CalendarPage() {
         const res = await authFetch.get(
           `${EVENTS_ENDPOINTS.list}?${params.toString()}`,
         );
-        const combineDateTime = (date, time) => {
+        const combineDateTime = (date?: string, time?: string) => {
           if (!date && !time) return undefined;
           const dateStr = date || '';
           const timeStr = time || '';
-          // If date already has time information, use it directly
           if (dateStr && dateStr.includes('T')) return new Date(dateStr);
-          // Otherwise, combine date and time into an ISO string
           return new Date(`${dateStr}${timeStr ? `T${timeStr}` : ''}`);
         };
 
-        const mapped = res.data.map((e) => ({
+        const mapped = res.data.map((e: EventItem) => ({
           ...e,
-          start: combineDateTime(e.start, e.start_time),
-          end: combineDateTime(e.end, e.end_time),
+          start: combineDateTime(e.start as any, e.start_time),
+          end: combineDateTime(e.end as any, e.end_time),
         }));
         setEvents(mapped);
       } catch (err) {
@@ -123,20 +133,20 @@ export default function CalendarPage() {
         events={events}
         startAccessor="start"
         endAccessor="end"
-        views={[ 'month', 'week', 'day' ]}
+        views={['month', 'week', 'day']}
         view={currentView}
         date={currentDate}
         onView={(view) => setCurrentView(view)}
         onNavigate={(date) => setCurrentDate(date)}
         style={{ height: 500 }}
-        onSelectEvent={(event) => setSelectedEvent(event)}
+        onSelectEvent={(event) => setSelectedEvent(event as EventItem)}
         tooltipAccessor={(event) => {
           const parts = [event.title];
           if (event.description) parts.push(event.description);
           if (event.location) parts.push(event.location);
           if (event.start && event.end) {
             parts.push(
-              `${format(event.start, 'Pp')} - ${format(event.end, 'Pp')}`,
+              `${format(event.start as Date, 'Pp')} - ${format(event.end as Date, 'Pp')}`,
             );
           }
           return parts.join('\n');

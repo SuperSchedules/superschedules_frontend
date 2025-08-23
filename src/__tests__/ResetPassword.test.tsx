@@ -2,7 +2,7 @@ import { render, screen, fireEvent, waitFor, cleanup } from '@testing-library/re
 import { MemoryRouter, Routes, Route } from 'react-router-dom';
 import { describe, it, expect, vi, afterEach } from 'vitest';
 import ResetPassword from '../pages/ResetPassword';
-import { AUTH_ENDPOINTS } from '../constants/api.js';
+import { AUTH_ENDPOINTS } from '../constants/api';
 
 function renderPage() {
   return render(
@@ -31,7 +31,7 @@ describe('ResetPassword page', () => {
     fireEvent.change(screen.getByLabelText(/confirm password/i), {
       target: { value: 'abc' },
     });
-    fireEvent.click(screen.getByText(/reset password/i));
+    fireEvent.click(screen.getByRole('button', { name: /reset password/i }));
 
     await waitFor(() => {
       expect(globalThis.fetch).toHaveBeenCalledWith(

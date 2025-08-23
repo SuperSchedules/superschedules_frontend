@@ -1,6 +1,6 @@
-import { useState } from 'react';
+import { useState, FormEvent } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { AUTH_ENDPOINTS } from '../constants/api.js';
+import { AUTH_ENDPOINTS } from '../constants/api';
 
 export default function CreateUser() {
   const navigate = useNavigate();
@@ -9,9 +9,9 @@ export default function CreateUser() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [zipCode, setZipCode] = useState('');
-  const [error, setError] = useState(null);
+  const [error, setError] = useState<string | null>(null);
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
     setError(null);
     const response = await fetch(AUTH_ENDPOINTS.register, {

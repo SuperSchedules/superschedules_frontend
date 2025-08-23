@@ -1,10 +1,14 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { useAuth } from '../auth.jsx';
-import ThemeToggle from './ThemeToggle.jsx';
+import { useAuth } from '../auth';
+import ThemeToggle from './ThemeToggle';
 import './TopBar.css';
 
-export default function TopBar({ onToggleSidebar }) {
+interface Props {
+  onToggleSidebar: () => void;
+}
+
+export default function TopBar({ onToggleSidebar }: Props) {
   const { user, logout } = useAuth();
   const [open, setOpen] = useState(false);
 

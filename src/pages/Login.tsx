@@ -1,7 +1,7 @@
-import { useState } from 'react';
+import { useState, FormEvent } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useAuth } from '../auth.jsx';
-import { AUTH_ENDPOINTS } from '../constants/api.js';
+import { useAuth } from '../auth';
+import { AUTH_ENDPOINTS } from '../constants/api';
 
 export default function Login() {
   const { login } = useAuth();
@@ -16,7 +16,7 @@ export default function Login() {
   const [loginAttempted, setLoginAttempted] = useState(false);
   const [resetAttempted, setResetAttempted] = useState(false);
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
     setLoginAttempted(true);
     setLoginError('');

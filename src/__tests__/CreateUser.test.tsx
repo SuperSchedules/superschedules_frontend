@@ -2,7 +2,7 @@ import { render, screen, fireEvent, cleanup } from '@testing-library/react';
 import { MemoryRouter, Routes, Route } from 'react-router-dom';
 import { describe, it, expect, afterEach, vi } from 'vitest';
 import { waitFor } from '@testing-library/react';
-import { AUTH_ENDPOINTS } from '../constants/api.js';
+import { AUTH_ENDPOINTS } from '../constants/api';
 import CreateUser from '../pages/CreateUser';
 
 describe('CreateUser page', () => {
@@ -55,7 +55,7 @@ describe('CreateUser page', () => {
     fireEvent.change(screen.getByLabelText(/zip code/i), {
       target: { value: '12345' },
     });
-    fireEvent.click(screen.getByText(/create account/i));
+    fireEvent.click(screen.getByRole('button', { name: /create account/i }));
 
     await waitFor(() => {
       expect(screen.getByText(/verify/i)).toBeInTheDocument();

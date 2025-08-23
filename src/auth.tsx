@@ -6,12 +6,28 @@ import {
   useEffect,
   useRef,
   useCallback,
+  ReactNode,
 } from 'react';
-import axios from 'axios';
-import { AUTH_ENDPOINTS } from './constants/api.js';
+import axios, { AxiosInstance } from 'axios';
+import { AUTH_ENDPOINTS } from './constants/api';
+
+interface Tokens {
+  token: string;
+  refresh: string;
+  tokenExp?: number;
+  refreshExp?: number;
+}
+
+interface AuthContextValue {
+  user: Tokens | null;
+  login: (username: string, password: string) => Promise<void>;
+  logout: () => void;
+  refreshToken: () => Promise<string>;
+  authFetch: AxiosInstance;
+}
 
 // Helper to decode a JWT and extract its payload. Returns null on failure.
-function parseJwt(token) {
+function parseJwt(token: string): any {
   try {
     const base64Url = token.split('.')[1];
     const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
@@ -29,10 +45,10 @@ function parseJwt(token) {
 
 const ONE_DAY_MS = 24 * 60 * 60 * 1000;
 
-export const AuthContext = createContext(null);
+export const AuthContext = createContext<AuthContextValue | null>(null);
 
-export function AuthProvider({ children }) {
-  const [user, setUser] = useState(() => {
+export function AuthProvider({ children }: { children: ReactNode }) {
+  const [user, setUser] = useState<Tokens | null>(() => {
     const token = localStorage.getItem('token');
     const refresh = localStorage.getItem('refresh');
     if (!token) return null;
@@ -40,13 +56,13 @@ export function AuthProvider({ children }) {
     const refreshPayload = parseJwt(refresh || '') || {};
     return {
       token,
-      refresh,
+      refresh: refresh || '',
       tokenExp: tokenPayload.exp,
       refreshExp: refreshPayload.exp,
     };
   });
 
-  const logoutTimerRef = useRef(null);
+  const logoutTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const logout = useCallback(() => {
     localStorage.removeItem('token');
@@ -79,7 +95,7 @@ export function AuthProvider({ children }) {
     };
   }, [user, logout]);
 
-  const login = async (username, password) => {
+  const login = async (username: string, password: string) => {
     const response = await fetch(AUTH_ENDPOINTS.login, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -123,7 +139,7 @@ export function AuthProvider({ children }) {
       throw new Error('Refresh failed');
     }
     const data = await response.json();
-    const access = data.access;
+    const access: string = data.access;
     const accessPayload = parseJwt(access) || {};
     localStorage.setItem('token', access);
     setUser({
@@ -151,12 +167,12 @@ export function AuthProvider({ children }) {
   };
 
   // Axios instance with interceptors to handle auth and refresh flow
-  const authFetch = axios.create();
+  const authFetch: AxiosInstance = axios.create();
 
   let isRefreshing = false;
-  let failedQueue = [];
+  let failedQueue: any[] = [];
 
-  const processQueue = (error, token = null) => {
+  const processQueue = (error: unknown, token: string | null = null) => {
     failedQueue.forEach((prom) => {
       if (error) {
         prom.reject(error);
@@ -172,7 +188,7 @@ export function AuthProvider({ children }) {
     config.headers = {
       ...(config.headers || {}),
       Authorization: `Bearer ${token}`,
-    };
+    } as Record<string, string>;
     return config;
   });
 
@@ -222,5 +238,5 @@ export function AuthProvider({ children }) {
 }
 
 export function useAuth() {
-  return useContext(AuthContext);
+  return useContext(AuthContext)!;
 }

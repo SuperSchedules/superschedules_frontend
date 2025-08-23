@@ -1,10 +1,10 @@
 import { render, screen, fireEvent, cleanup } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import Login from '../pages/Login';
-import { AuthProvider } from '../auth.jsx';
+import { AuthProvider } from '../auth';
 import { describe, it, expect, afterEach, vi } from 'vitest';
 import { waitFor } from '@testing-library/react';
-import { AUTH_ENDPOINTS } from '../constants/api.js';
+import { AUTH_ENDPOINTS } from '../constants/api';
 
 function renderPage() {
   return render(

@@ -1,5 +1,5 @@
-import { CHAT_ENDPOINTS, EVENTS_ENDPOINTS } from '../constants/api.js';
-import type { AuthFetch, ChatContext, ChatResponse, Event, EventsByIdsResponse } from '../types/index.js';
+import { CHAT_ENDPOINTS, EVENTS_ENDPOINTS } from '../constants/api';
+import type { AuthFetch, ChatContext, ChatResponse, Event, EventsByIdsResponse } from '../types';
 
 export class ChatService {
   private authFetch: AuthFetch;

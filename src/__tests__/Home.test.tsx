@@ -1,8 +1,8 @@
 import { render, screen } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import { describe, it, expect, vi } from 'vitest';
-import Home from '../pages/Home.jsx';
-import { AuthContext } from '../auth.jsx';
+import Home from '../pages/Home';
+import { AuthContext } from '../auth';
 
 function renderWithAuth(ui, { sources = [] } = {}) {
   const value = {

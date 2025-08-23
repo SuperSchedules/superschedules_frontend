@@ -1,4 +1,4 @@
-import type { AuthFetch, ModelPreferenceFeedback, AnalyticsSummary, ModelResponse } from '../types/index.js';
+import type { AuthFetch, ModelPreferenceFeedback, AnalyticsSummary, ModelResponse } from '../types';
 
 /**
  * Analytics service for A/B testing feedback

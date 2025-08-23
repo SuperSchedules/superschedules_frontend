@@ -1,6 +1,6 @@
-import { useState } from 'react';
+import { useState, FormEvent } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
-import { AUTH_ENDPOINTS } from '../constants/api.js';
+import { AUTH_ENDPOINTS } from '../constants/api';
 
 export default function ResetPassword() {
   const [searchParams] = useSearchParams();
@@ -12,7 +12,7 @@ export default function ResetPassword() {
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState('');
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
     setAttempted(true);
     setMessage('');

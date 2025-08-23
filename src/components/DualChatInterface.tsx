@@ -1,8 +1,8 @@
-import { useState, useRef, useEffect } from 'react';
-import { useAuth } from '../auth.js';
-import { ChatService } from '../services/chatService.js';
-import { AnalyticsService } from '../services/analyticsService.js';
-import type { DualChatInterfaceProps, ChatMessage, Event } from '../types/index.js';
+import { useState, useRef, useEffect, KeyboardEvent } from 'react';
+import { useAuth } from '../auth';
+import { ChatService } from '../services/chatService';
+import { AnalyticsService } from '../services/analyticsService';
+import type { DualChatInterfaceProps, ChatMessage, Event } from '../types';
 import './DualChatInterface.css';
 
 export default function DualChatInterface({ 
@@ -177,7 +177,7 @@ export default function DualChatInterface({
     console.log(`User preferred ${model} for message ${messageId}`);
   };
 
-  const handleKeyPress = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+  const handleKeyPress = (e: KeyboardEvent<HTMLTextAreaElement>) => {
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
       handleSendMessage();

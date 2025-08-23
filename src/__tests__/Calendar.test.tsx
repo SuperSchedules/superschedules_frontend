@@ -1,9 +1,9 @@
 import React from 'react';
 import { render, screen, waitFor, cleanup } from '@testing-library/react';
 import { describe, it, expect, afterEach, vi } from 'vitest';
-import CalendarPage from '../pages/Calendar.jsx';
-import { AuthContext } from '../auth.jsx';
-import { EVENTS_ENDPOINTS } from '../constants/api.js';
+import CalendarPage from '../pages/Calendar';
+import { AuthContext } from '../auth';
+import { EVENTS_ENDPOINTS } from '../constants/api';
 
 const handlers = {};
 

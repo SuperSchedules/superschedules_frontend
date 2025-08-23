@@ -5,7 +5,7 @@ vi.mock('react-big-calendar', () => ({
   dateFnsLocalizer: () => () => {},
 }));
 
-vi.mock('../auth.jsx', () => {
+vi.mock('../auth', () => {
   const mockAuthFetch = { get: vi.fn().mockResolvedValue({ data: [] }) };
   const AuthContext = React.createContext(null);
   const useAuth = () => React.useContext(AuthContext);
@@ -25,10 +25,10 @@ vi.mock('../auth.jsx', () => {
   return { AuthProvider, AuthContext, useAuth, mockAuthFetch };
 });
 
-import { mockAuthFetch } from '../auth.jsx';
+import { mockAuthFetch } from '../auth';
 import { render, screen, cleanup, waitFor } from '@testing-library/react';
 import App from '../App';
-import { EVENTS_ENDPOINTS } from '../constants/api.js';
+import { EVENTS_ENDPOINTS } from '../constants/api';
 
 describe('App routing', () => {
   afterEach(() => {
