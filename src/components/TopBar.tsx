@@ -1,12 +1,30 @@
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../auth.jsx';
 import ThemeToggle from './ThemeToggle.jsx';
 import './TopBar.css';
 
-export default function TopBar({ onToggleSidebar }) {
+interface TopBarProps {
+  onToggleSidebar: () => void;
+}
+
+export default function TopBar({ onToggleSidebar }: TopBarProps) {
   const { user, logout } = useAuth();
   const [open, setOpen] = useState(false);
+  const menuRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
+        setOpen(false);
+      }
+    }
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, []);
 
   return (
     <header className="topbar navbar px-3 text-dark">
@@ -21,7 +39,7 @@ export default function TopBar({ onToggleSidebar }) {
       <div className="ms-auto d-flex align-items-center gap-2">
         <ThemeToggle />
         {user ? (
-          <div className="user-menu">
+          <div className="user-menu" ref={menuRef}>
             <button
               className="btn btn-outline"
               aria-label="settings"

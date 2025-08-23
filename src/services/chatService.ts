@@ -8,7 +8,7 @@ export class ChatService {
     this.authFetch = authFetch;
   }
 
-  async sendMessage(message: string, context: ChatContext = {}): Promise<ChatResponse> {
+  async sendMessage(message: string, context: ChatContext = { preferences: {} }): Promise<ChatResponse> {
     try {
       const payload = {
         message: message.trim(),
@@ -56,12 +56,12 @@ export class ChatService {
       
       // Fallback to mock response for development
       if (import.meta.env.DEV) {
-        return this.getMockResponse(message, context);
+        return this.getMockResponse(message);
       }
       
       return {
         success: false,
-        error: error.response?.data?.message || 'Failed to send message'
+        error: (error as any).response?.data?.message || 'Failed to send message'
       };
     }
   }
@@ -85,7 +85,7 @@ export class ChatService {
       console.error('Suggestions service error:', error);
       return {
         success: false,
-        error: error.response?.data?.message || 'Failed to get suggestions'
+        error: (error as any).response?.data?.message || 'Failed to get suggestions'
       };
     }
   }
@@ -96,32 +96,60 @@ export class ChatService {
         return { success: true, data: [] };
       }
 
-      // Fetch events by IDs from the backend
+      // Convert string IDs to integers for the backend API
+      const numericIds: number[] = [];
+      for (const id of eventIds) {
+        const numId = parseInt(id, 10);
+        if (!isNaN(numId)) {
+          numericIds.push(numId);
+        }
+      }
+      
+      if (numericIds.length === 0) {
+        console.warn('No valid numeric IDs found, returning mock data');
+        // Return mock events if no valid numeric IDs
+        const mockEvents = eventIds.map((id, index) => ({
+          id: id,
+          title: `Mock Event ${index + 1}`,
+          description: `This is a mock event for ID: ${id}`,
+          location: 'Mock Location',
+          start: new Date(Date.now() + (index * 24 * 60 * 60 * 1000)),
+          end: new Date(Date.now() + (index * 24 * 60 * 60 * 1000) + (2 * 60 * 60 * 1000)),
+          date: new Date(Date.now() + (index * 24 * 60 * 60 * 1000)).toISOString().split('T')[0],
+          suggested: true
+        }));
+        
+        return {
+          success: true,
+          data: mockEvents
+        };
+      }
+
+      // Make request to backend with correct integer IDs
       const params = new URLSearchParams();
-      eventIds.forEach(id => params.append('ids', id));
+      numericIds.forEach(id => params.append('ids', id.toString()));
       
       const response = await this.authFetch.get(
         `${EVENTS_ENDPOINTS.list}?${params.toString()}`
       );
       
-      // Mark fetched events as suggested
-      const suggestedEvents = response.data.map((event: Event) => ({
+      // Process the response and ensure proper date formatting
+      const events = response.data.map((event: any): Event => ({
         ...event,
         suggested: true,
-        // Ensure dates are properly formatted
-        start: event.start ? new Date(event.start) : undefined,
-        end: event.end ? new Date(event.end) : undefined
+        start: event.start_time ? new Date(event.start_time) : new Date(),
+        end: event.end_time ? new Date(event.end_time) : new Date(),
       }));
       
       return {
         success: true,
-        data: suggestedEvents
+        data: events
       };
     } catch (error) {
       console.error('Error fetching events by IDs:', error);
       return {
         success: false,
-        error: error.response?.data?.message || 'Failed to fetch events'
+        error: (error as any).response?.data?.message || 'Failed to fetch events'
       };
     }
   }
@@ -151,7 +179,7 @@ export class ChatService {
     }
     responseText += `. Let me find some suitable events for you!`;
 
-    // Generate mock event IDs based on the query
+    // Generate mock event IDs (using integers that might exist in the database)
     const mockEventIds = this.generateMockEventIds(ages, location, timeframe);
     
     const followUpQuestions = [];

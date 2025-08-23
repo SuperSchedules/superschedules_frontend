@@ -68,8 +68,8 @@ export class AnalyticsService {
       
       const summary = {
         total_selections: feedback.length,
-        model_a_selected: feedback.filter(f => f.selected_model === 'A').length,
-        model_b_selected: feedback.filter(f => f.selected_model === 'B').length,
+        model_a_selected: feedback.filter((f: any) => f.selected_model === 'A').length,
+        model_b_selected: feedback.filter((f: any) => f.selected_model === 'B').length,
         average_response_time_a: 0,
         average_response_time_b: 0,
         model_a_success_rate: 0,
@@ -77,23 +77,23 @@ export class AnalyticsService {
       };
 
       if (feedback.length > 0) {
-        const modelAFeedback = feedback.map(f => f.model_a);
-        const modelBFeedback = feedback.map(f => f.model_b);
+        const modelAFeedback = feedback.map((f: any) => f.model_a);
+        const modelBFeedback = feedback.map((f: any) => f.model_b);
 
         summary.average_response_time_a = Math.round(
-          modelAFeedback.reduce((sum, m) => sum + m.response_time_ms, 0) / modelAFeedback.length
+          modelAFeedback.reduce((sum: number, m: any) => sum + m.response_time_ms, 0) / modelAFeedback.length
         );
         
         summary.average_response_time_b = Math.round(
-          modelBFeedback.reduce((sum, m) => sum + m.response_time_ms, 0) / modelBFeedback.length
+          modelBFeedback.reduce((sum: number, m: any) => sum + m.response_time_ms, 0) / modelBFeedback.length
         );
 
         summary.model_a_success_rate = Math.round(
-          (modelAFeedback.filter(m => m.success).length / modelAFeedback.length) * 100
+          (modelAFeedback.filter((m: any) => m.success).length / modelAFeedback.length) * 100
         );
 
         summary.model_b_success_rate = Math.round(
-          (modelBFeedback.filter(m => m.success).length / modelBFeedback.length) * 100
+          (modelBFeedback.filter((m: any) => m.success).length / modelBFeedback.length) * 100
         );
       }
 

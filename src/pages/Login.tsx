@@ -16,7 +16,7 @@ export default function Login() {
   const [loginAttempted, setLoginAttempted] = useState(false);
   const [resetAttempted, setResetAttempted] = useState(false);
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoginAttempted(true);
     setLoginError('');

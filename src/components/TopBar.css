@@ -9,6 +9,7 @@
 .topbar .btn {
   color: var(--text-color);
   border-color: var(--border-color);
+  font-size: 1.125rem;
 }
 
 .topbar .btn:hover {
@@ -19,6 +20,7 @@
 
 .topbar .navbar-brand {
   color: var(--text-color) !important;
+  font-size: 1.5rem;
 }
 
 .user-menu {
@@ -38,10 +40,12 @@
 .user-menu .menu li {
   margin: 0.25rem 0;
   color: var(--text-color);
+  font-size: 1rem;
 }
 
 .user-menu .btn-link {
   color: var(--link-color) !important;
+  font-size: 1rem;
 }
 
 .user-menu .btn-link:hover {

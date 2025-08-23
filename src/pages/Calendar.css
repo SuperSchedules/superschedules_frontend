@@ -73,3 +73,55 @@
   background-color: var(--primary-color);
   color: white;
 }
+
+/* Chat section styling */
+.chat-section {
+  margin-top: 2rem;
+  padding: 1rem;
+  background-color: var(--card-bg-color);
+  border-radius: 0.375rem;
+  border: 1px solid var(--border-color);
+}
+
+.chat-section h2 {
+  margin-bottom: 1rem;
+  color: var(--text-color);
+}
+
+/* Events list styling */
+.events-list {
+  margin-top: 2rem;
+  padding: 1rem;
+  background-color: var(--card-bg-color);
+  border-radius: 0.375rem;
+  border: 1px solid var(--border-color);
+}
+
+.events-list h2 {
+  margin-bottom: 1rem;
+  color: var(--text-color);
+}
+
+.events-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 1rem;
+}
+
+.event-card {
+  padding: 1rem;
+  background-color: var(--content-bg-color);
+  border-radius: 0.375rem;
+  border: 1px solid var(--border-color);
+}
+
+.event-card h3 {
+  margin-top: 0;
+  margin-bottom: 0.5rem;
+  color: var(--primary-color);
+}
+
+.event-card p {
+  margin: 0.25rem 0;
+  color: var(--text-color);
+}

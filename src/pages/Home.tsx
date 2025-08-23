@@ -3,16 +3,25 @@ import { useAuth } from '../auth.jsx';
 import { SOURCES_ENDPOINTS } from '../constants/api.js';
 import './Home.css';
 
+interface Source {
+  id: number;
+  base_url: string;
+  name?: string;
+  date_added: string;
+  last_run_at: string | null;
+  status: string;
+}
+
 export default function Home() {
   const { user, authFetch } = useAuth();
-  const [sources, setSources] = useState([]);
+  const [sources, setSources] = useState<Source[]>([]);
   const [url, setUrl] = useState('');
   const [name, setName] = useState('');
 
-  const truncateUrl = (str, length = 50) =>
+  const truncateUrl = (str: string, length = 50): string =>
     str && str.length > length ? `${str.slice(0, length)}…` : str;
 
-  const formatDate = (d) => (d ? new Date(d).toLocaleDateString() : '');
+  const formatDate = (d: string | null): string => (d ? new Date(d).toLocaleDateString() : '');
 
   useEffect(() => {
     if (!user) return;
@@ -27,7 +36,7 @@ export default function Home() {
     loadSources();
   }, [user, authFetch]);
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
       const res = await authFetch.post(SOURCES_ENDPOINTS.list, {
