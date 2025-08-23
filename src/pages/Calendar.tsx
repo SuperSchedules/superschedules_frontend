@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Calendar as BigCalendar, dateFnsLocalizer } from 'react-big-calendar';
+import { Calendar as BigCalendar, dateFnsLocalizer, View } from 'react-big-calendar';
 import {
   format,
   parse,
@@ -15,8 +15,9 @@ import { enUS } from 'date-fns/locale';
 import 'react-big-calendar/lib/css/react-big-calendar.css';
 import './Calendar.css';
 import { EVENTS_ENDPOINTS } from '../constants/api.js';
-import { useAuth } from '../auth.jsx';
-import DualChatInterface from '../components/DualChatInterface.jsx';
+import { useAuth } from '../auth.js';
+import DualChatInterface from '../components/DualChatInterface.js';
+import type { Event } from '../types/index.js';
 
 const locales = {
   'en-US': enUS,
@@ -31,15 +32,15 @@ const localizer = dateFnsLocalizer({
 });
 
 export default function CalendarPage() {
-  const [events, setEvents] = useState([]);
-  const [selectedEvent, setSelectedEvent] = useState(null);
-  const [currentView, setCurrentView] = useState('month');
-  const [currentDate, setCurrentDate] = useState(new Date());
-  const [rangeStart, setRangeStart] = useState('');
-  const [rangeEnd, setRangeEnd] = useState('');
-  const [suggestedEvents, setSuggestedEvents] = useState([]);
-  const [showChat, setShowChat] = useState(true);
-  const [loadingSuggestions, setLoadingSuggestions] = useState(false);
+  const [events, setEvents] = useState<Event[]>([]);
+  const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
+  const [currentView, setCurrentView] = useState<View>('month');
+  const [currentDate, setCurrentDate] = useState<Date>(new Date());
+  const [rangeStart, setRangeStart] = useState<string>('');
+  const [rangeEnd, setRangeEnd] = useState<string>('');
+  const [suggestedEvents, setSuggestedEvents] = useState<Event[]>([]);
+  const [showChat, setShowChat] = useState<boolean>(true);
+  const [loadingSuggestions, setLoadingSuggestions] = useState<boolean>(false);
 
   const { user, authFetch } = useAuth();
 
@@ -77,7 +78,7 @@ export default function CalendarPage() {
         const res = await authFetch.get(
           `${EVENTS_ENDPOINTS.list}?${params.toString()}`,
         );
-        const combineDateTime = (date, time) => {
+        const combineDateTime = (date: string | null, time: string | null): Date | undefined => {
           if (!date && !time) return undefined;
           const dateStr = date || '';
           const timeStr = time || '';
@@ -87,7 +88,7 @@ export default function CalendarPage() {
           return new Date(`${dateStr}${timeStr ? `T${timeStr}` : ''}`);
         };
 
-        const mapped = res.data.map((e) => ({
+        const mapped = res.data.map((e: Event) => ({
           ...e,
           start: combineDateTime(e.start, e.start_time),
           end: combineDateTime(e.end, e.end_time),
@@ -101,20 +102,20 @@ export default function CalendarPage() {
     loadEvents();
   }, [user, authFetch, currentView, currentDate, rangeStart, rangeEnd]);
 
-  const handleSuggestedEvents = (newSuggestedEvents) => {
+  const handleSuggestedEvents = (newSuggestedEvents: Event[]) => {
     setSuggestedEvents(newSuggestedEvents);
     setLoadingSuggestions(false);
     // Note: We don't merge here anymore since we use displayEvents computed property
   };
 
-  const handleSuggestionsLoading = (isLoading) => {
+  const handleSuggestionsLoading = (isLoading: boolean) => {
     setLoadingSuggestions(isLoading);
     if (isLoading) {
       setSuggestedEvents([]); // Clear previous suggestions while loading new ones
     }
   };
 
-  const handleCalendarUpdate = (event) => {
+  const handleCalendarUpdate = (event: Event) => {
     // Navigate to the event's date and highlight it
     if (event.start) {
       setCurrentDate(new Date(event.start));

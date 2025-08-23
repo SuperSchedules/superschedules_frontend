@@ -1,11 +1,14 @@
 import { CHAT_ENDPOINTS, EVENTS_ENDPOINTS } from '../constants/api.js';
+import type { AuthFetch, ChatContext, ChatResponse, Event, EventsByIdsResponse } from '../types/index.js';
 
 export class ChatService {
-  constructor(authFetch) {
+  private authFetch: AuthFetch;
+
+  constructor(authFetch: AuthFetch) {
     this.authFetch = authFetch;
   }
 
-  async sendMessage(message, context = {}) {
+  async sendMessage(message: string, context: ChatContext = {}): Promise<ChatResponse> {
     try {
       const payload = {
         message: message.trim(),
@@ -63,7 +66,7 @@ export class ChatService {
     }
   }
 
-  async getSuggestions(query, filters = {}) {
+  async getSuggestions(query: string, filters: Record<string, any> = {}): Promise<{ success: boolean; data?: string[]; error?: string }> {
     try {
       const params = new URLSearchParams({
         q: query,
@@ -87,7 +90,7 @@ export class ChatService {
     }
   }
 
-  async fetchEventsByIds(eventIds) {
+  async fetchEventsByIds(eventIds: string[]): Promise<{ success: boolean; data?: Event[]; error?: string }> {
     try {
       if (!eventIds || eventIds.length === 0) {
         return { success: true, data: [] };
@@ -102,7 +105,7 @@ export class ChatService {
       );
       
       // Mark fetched events as suggested
-      const suggestedEvents = response.data.map(event => ({
+      const suggestedEvents = response.data.map((event: Event) => ({
         ...event,
         suggested: true,
         // Ensure dates are properly formatted
@@ -123,7 +126,7 @@ export class ChatService {
     }
   }
 
-  getMockResponse(message) {
+  getMockResponse(message: string): ChatResponse {
     const lowerMessage = message.toLowerCase();
     
     // Parse age mentions
@@ -193,7 +196,7 @@ export class ChatService {
     };
   }
 
-  generateMockEventIds(ages, location, timeframe) {
+  generateMockEventIds(ages: number[] | null, location: string, timeframe: string): string[] {
     // In development, return mock event IDs that would come from your RAG system
     // These would be actual event IDs from your PostgreSQL database in production
     
@@ -225,7 +228,7 @@ export class ChatService {
   }
 
   // Keep this method for development fallback when event fetching fails
-  generateMockEventsFromIds(eventIds) {
+  generateMockEventsFromIds(eventIds: string[]): Event[] {
     const baseEvents = {
       'event-001': {
         id: 'event-001',
@@ -256,7 +259,7 @@ export class ChatService {
       }
     };
     
-    return eventIds.map(id => baseEvents[id] || {
+    return eventIds.map(id => baseEvents[id as keyof typeof baseEvents] || {
       id,
       title: `Event ${id}`,
       description: "Event details would come from database",

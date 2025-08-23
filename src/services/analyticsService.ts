@@ -1,22 +1,27 @@
+import type { AuthFetch, ModelPreferenceFeedback, AnalyticsSummary, ModelResponse } from '../types/index.js';
+
 /**
  * Analytics service for A/B testing feedback
  */
 export class AnalyticsService {
-  constructor(authFetch) {
+  private authFetch: AuthFetch;
+
+  constructor(authFetch: AuthFetch) {
     this.authFetch = authFetch;
   }
 
   /**
    * Track user model preference for A/B testing
-   * @param {string} messageId - The chat message ID
-   * @param {string} selectedModel - 'A' or 'B'
-   * @param {Object} modelA - Model A response data
-   * @param {Object} modelB - Model B response data
-   * @param {string} userQuery - Original user query
    */
-  async trackModelPreference(messageId, selectedModel, modelA, modelB, userQuery) {
+  async trackModelPreference(
+    messageId: number,
+    selectedModel: 'A' | 'B',
+    modelA: ModelResponse,
+    modelB: ModelResponse,
+    userQuery: string
+  ): Promise<{ success: boolean; error?: any }> {
     try {
-      const feedbackData = {
+      const feedbackData: ModelPreferenceFeedback = {
         message_id: messageId,
         selected_model: selectedModel,
         user_query: userQuery,
@@ -57,7 +62,7 @@ export class AnalyticsService {
   /**
    * Get A/B testing analytics summary
    */
-  getAnalyticsSummary() {
+  getAnalyticsSummary(): AnalyticsSummary | null {
     try {
       const feedback = JSON.parse(localStorage.getItem('ab_testing_feedback') || '[]');
       

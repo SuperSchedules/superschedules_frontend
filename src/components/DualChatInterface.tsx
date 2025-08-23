@@ -1,7 +1,8 @@
 import { useState, useRef, useEffect } from 'react';
-import { useAuth } from '../auth.jsx';
+import { useAuth } from '../auth.js';
 import { ChatService } from '../services/chatService.js';
 import { AnalyticsService } from '../services/analyticsService.js';
+import type { DualChatInterfaceProps, ChatMessage, Event } from '../types/index.js';
 import './DualChatInterface.css';
 
 export default function DualChatInterface({ 
@@ -11,8 +12,8 @@ export default function DualChatInterface({
   suggestedEvents = [],
   loadingSuggestions = false,
   isVisible = true 
-}) {
-  const [messages, setMessages] = useState([
+}: DualChatInterfaceProps) {
+  const [messages, setMessages] = useState<ChatMessage[]>([
     {
       id: 1,
       type: 'assistant',
@@ -20,11 +21,11 @@ export default function DualChatInterface({
       timestamp: new Date()
     }
   ]);
-  const [inputMessage, setInputMessage] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
-  const [sessionId, setSessionId] = useState(null);
-  const [selectedModel, setSelectedModel] = useState(null); // Track which model user prefers
-  const messagesEndRef = useRef(null);
+  const [inputMessage, setInputMessage] = useState<string>('');
+  const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [sessionId, setSessionId] = useState<string | null>(null);
+  const [selectedModel, setSelectedModel] = useState<'A' | 'B' | null>(null); // Track which model user prefers
+  const messagesEndRef = useRef<HTMLDivElement>(null);
   const { authFetch } = useAuth();
   const [chatService] = useState(() => new ChatService(authFetch));
   const [analyticsService] = useState(() => new AnalyticsService(authFetch));
@@ -145,7 +146,7 @@ export default function DualChatInterface({
     }
   };
 
-  const handleModelSelection = async (messageId, model) => {
+  const handleModelSelection = async (messageId: number, model: 'A' | 'B') => {
     // Find the message to get the full context
     const targetMessage = messages.find(msg => msg.id === messageId && msg.type === 'dual-assistant');
     if (!targetMessage) return;
@@ -176,14 +177,14 @@ export default function DualChatInterface({
     console.log(`User preferred ${model} for message ${messageId}`);
   };
 
-  const handleKeyPress = (e) => {
+  const handleKeyPress = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
       handleSendMessage();
     }
   };
 
-  const formatTime = (timestamp) => {
+  const formatTime = (timestamp: Date | string) => {
     return new Date(timestamp).toLocaleTimeString([], { 
       hour: '2-digit', 
       minute: '2-digit' 
