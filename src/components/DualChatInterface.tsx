@@ -1,10 +1,13 @@
 import { useState, useRef, useEffect } from 'react';
 import { useAuth } from '../auth.js';
+import { useUserPreferences } from '../hooks/useUserPreferences.js';
 import { ChatService } from '../services/chatService.js';
 import { FastAPIStreamingChatService, MockStreamingChatService } from '../services/streamingChatService.js';
 import { AnalyticsService } from '../services/analyticsService.js';
+import UserPreferences from './UserPreferences.js';
 import type { DualChatInterfaceProps, ChatMessage, Event } from '../types/index.js';
 import './DualChatInterface.css';
+import './UserPreferences.css';
 
 // Enhanced text formatter that preserves line breaks and formatting
 const formatMessageContent = (text: string): string => {
@@ -28,6 +31,37 @@ const htmlToText = (html: string): string => {
   return tempDiv.textContent || tempDiv.innerText || '';
 };
 
+const CHAT_STORAGE_KEY = 'superschedules_chat_messages';
+const SESSION_STORAGE_KEY = 'superschedules_session_id';
+
+// Default welcome message
+const getDefaultMessages = (): ChatMessage[] => [
+  {
+    id: 1,
+    type: 'assistant',
+    content: "Hi! I'm here to help you find events. Tell me what you're looking for - like activities for specific ages, locations, or timeframes.",
+    timestamp: new Date()
+  }
+];
+
+// Load messages from localStorage
+const loadPersistedMessages = (): ChatMessage[] => {
+  try {
+    const stored = localStorage.getItem(CHAT_STORAGE_KEY);
+    if (stored) {
+      const parsed = JSON.parse(stored);
+      // Convert timestamp strings back to Date objects
+      return parsed.map((msg: any) => ({
+        ...msg,
+        timestamp: new Date(msg.timestamp)
+      }));
+    }
+  } catch (error) {
+    console.warn('Failed to load persisted chat messages:', error);
+  }
+  return getDefaultMessages();
+};
+
 export default function DualChatInterface({ 
   onSuggestedEvents, 
   onSuggestionsLoading,
@@ -36,23 +70,20 @@ export default function DualChatInterface({
   loadingSuggestions = false,
   isVisible = true 
 }: DualChatInterfaceProps) {
-  const [messages, setMessages] = useState<ChatMessage[]>([
-    {
-      id: 1,
-      type: 'assistant',
-      content: "Hi! I'm here to help you find events. Tell me what you're looking for - like activities for specific ages, locations, or timeframes.",
-      timestamp: new Date()
-    }
-  ]);
+  const [messages, setMessages] = useState<ChatMessage[]>(loadPersistedMessages);
   const [inputMessage, setInputMessage] = useState<string>('');
   const [isLoading, setIsLoading] = useState<boolean>(false);
-  const [sessionId, setSessionId] = useState<string | null>(null);
+  const [sessionId, setSessionId] = useState<string | null>(() => {
+    return localStorage.getItem(SESSION_STORAGE_KEY);
+  });
   const [selectedModel, setSelectedModel] = useState<'A' | 'B' | null>(null); // Track which model user prefers
   const [useStreaming, setUseStreaming] = useState<boolean>(true); // Toggle for streaming mode
   const [useABTesting, setUseABTesting] = useState<boolean>(false); // Toggle for A/B testing mode
   const [streamingCleanup, setStreamingCleanup] = useState<(() => void) | null>(null);
+  const [showPreferences, setShowPreferences] = useState<boolean>(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const { authFetch } = useAuth();
+  const { preferences, getPreferencesContext } = useUserPreferences();
   const [chatService] = useState(() => new ChatService(authFetch));
   const [streamingService] = useState(() => {
     // Try FastAPI first, fallback to mock for development
@@ -71,6 +102,33 @@ export default function DualChatInterface({
     if (chatMessagesRef.current) {
       chatMessagesRef.current.scrollTop = chatMessagesRef.current.scrollHeight;
     }
+  };
+
+  // Persist messages to localStorage whenever they change
+  useEffect(() => {
+    try {
+      localStorage.setItem(CHAT_STORAGE_KEY, JSON.stringify(messages));
+    } catch (error) {
+      console.warn('Failed to persist chat messages:', error);
+    }
+  }, [messages]);
+
+  // Persist session ID when it changes
+  useEffect(() => {
+    if (sessionId) {
+      localStorage.setItem(SESSION_STORAGE_KEY, sessionId);
+    }
+  }, [sessionId]);
+
+  // Clear chat function
+  const clearChat = () => {
+    const defaultMessages = getDefaultMessages();
+    setMessages(defaultMessages);
+    setSessionId(null);
+    onSuggestedEvents([]); // Clear suggested events
+    localStorage.removeItem(CHAT_STORAGE_KEY);
+    localStorage.removeItem(SESSION_STORAGE_KEY);
+    console.log('Chat cleared');
   };
 
   useEffect(() => {
@@ -111,6 +169,55 @@ export default function DualChatInterface({
     } else {
       await handleRegularMessage(userMessage.content);
     }
+  };
+
+  // Convert messages to chat history format for backend with smart truncation
+  const formatChatHistory = (maxMessages: number = 10) => {
+    // Always keep the welcome message (first message) for context
+    const welcomeMessage = messages[0];
+    const recentMessages = messages.slice(1); // Skip welcome message
+    
+    // Get the most recent messages (up to maxMessages)
+    const messagesToInclude = recentMessages.slice(-maxMessages);
+    
+    const formatMessage = (msg: any) => {
+      if (msg.type === 'user') {
+        return { role: 'user', content: msg.content };
+      } else if (msg.type === 'assistant') {
+        return { role: 'assistant', content: msg.content };
+      } else if (msg.type === 'dual-assistant') {
+        // For dual responses, use the selected model or default to Model B
+        const content = msg.selectedModel === 'A' 
+          ? msg.modelA.content || msg.modelA.response 
+          : msg.modelB.content || msg.modelB.response;
+        return { role: 'assistant', content: content };
+      }
+      return null;
+    };
+
+    const history = [];
+    
+    // Add welcome message context if it's not a default message
+    if (welcomeMessage && messagesToInclude.length > 0) {
+      const welcomeFormatted = formatMessage(welcomeMessage);
+      if (welcomeFormatted) {
+        history.push(welcomeFormatted);
+      }
+    }
+    
+    // Add recent messages
+    messagesToInclude.forEach(msg => {
+      const formatted = formatMessage(msg);
+      if (formatted) {
+        history.push(formatted);
+      }
+    });
+
+    // Estimate token count (rough approximation: ~4 chars per token)
+    const estimatedTokens = JSON.stringify(history).length / 4;
+    console.log(`Chat history: ${history.length} messages, ~${Math.round(estimatedTokens)} tokens`);
+    
+    return history;
   };
 
   const handleStreamingMessage = async (message: string) => {
@@ -199,9 +306,13 @@ export default function DualChatInterface({
       },
       // Context
       {
-        location: null,
-        preferences: {},
-        session_id: sessionId
+        location: preferences.location || null,
+        preferences: {
+          ...preferences,
+          context_summary: getPreferencesContext()
+        },
+        session_id: sessionId,
+        chat_history: formatChatHistory()
       },
       // Single model mode (opposite of A/B testing)
       !useABTesting
@@ -213,9 +324,16 @@ export default function DualChatInterface({
   const checkStreamingComplete = (messageId: number) => {
     setMessages(prev => {
       const message = prev.find(msg => msg.id === messageId);
-      if (message && message.type === 'dual-assistant' && 
-          message.modelA.isComplete && message.modelB.isComplete) {
-        setIsLoading(false);
+      if (message && message.type === 'dual-assistant') {
+        // In A/B testing mode, both models need to complete
+        // In single model mode, only Model B needs to complete
+        const isComplete = useABTesting 
+          ? (message.modelA.isComplete && message.modelB.isComplete)
+          : message.modelB.isComplete;
+        
+        if (isComplete) {
+          setIsLoading(false);
+        }
       }
       return prev;
     });
@@ -224,24 +342,29 @@ export default function DualChatInterface({
   // Effect to handle suggested events after streaming is complete
   useEffect(() => {
     const latestMessage = messages[messages.length - 1];
-    if (latestMessage && 
-        latestMessage.type === 'dual-assistant' && 
-        latestMessage.modelA.isComplete && 
-        latestMessage.modelB.isComplete) {
+    if (latestMessage && latestMessage.type === 'dual-assistant') {
+      // Check if streaming is complete based on mode
+      const isComplete = useABTesting 
+        ? (latestMessage.modelA.isComplete && latestMessage.modelB.isComplete)
+        : latestMessage.modelB.isComplete;
       
-      // Both models are complete, handle suggested events
-      const allSuggestedIds = [
-        ...latestMessage.modelA.suggestedEventIds,
-        ...latestMessage.modelB.suggestedEventIds
-      ].filter((id, index, self) => self.indexOf(id) === index);
+      if (isComplete) {
+        // Get suggested events from the appropriate model(s)
+        const allSuggestedIds = useABTesting 
+          ? [
+              ...latestMessage.modelA.suggestedEventIds,
+              ...latestMessage.modelB.suggestedEventIds
+            ].filter((id, index, self) => self.indexOf(id) === index)
+          : [...latestMessage.modelB.suggestedEventIds];
       
       console.log('Processing suggested events:', allSuggestedIds);
       
-      if (allSuggestedIds.length > 0) {
-        handleSuggestedEvents(allSuggestedIds);
+        if (allSuggestedIds.length > 0) {
+          handleSuggestedEvents(allSuggestedIds);
+        }
       }
     }
-  }, [messages]);
+  }, [messages, useABTesting]);
 
   const handleSuggestedEvents = async (suggestedIds: (string | number)[]) => {
     console.log('handleSuggestedEvents called with:', suggestedIds);
@@ -278,10 +401,14 @@ export default function DualChatInterface({
   const handleRegularMessage = async (message: string) => {
     try {
       const response = await chatService.sendMessage(message, {
-        location: null,
-        preferences: {},
+        location: preferences.location || null,
+        preferences: {
+          ...preferences,
+          context_summary: getPreferencesContext()
+        },
         session_id: sessionId,
-        clear_suggestions: false
+        clear_suggestions: false,
+        chat_history: formatChatHistory()
       });
 
       if (response.success) {
@@ -393,6 +520,20 @@ export default function DualChatInterface({
       <div className="chat-header">
         <h3>Event Assistant</h3>
         <div className="header-controls">
+          <button 
+            className="preferences-btn"
+            onClick={() => setShowPreferences(true)}
+            title="Set your event preferences"
+          >
+            ⚙️ Preferences
+          </button>
+          <button 
+            className="clear-chat-btn"
+            onClick={clearChat}
+            title="Clear conversation history"
+          >
+            🗑️ Clear Chat
+          </button>
           <div className="toggle-controls">
             <label>
               <input
@@ -606,6 +747,11 @@ export default function DualChatInterface({
           Send
         </button>
       </div>
+      
+      <UserPreferences 
+        isOpen={showPreferences} 
+        onClose={() => setShowPreferences(false)} 
+      />
     </div>
   );
 }

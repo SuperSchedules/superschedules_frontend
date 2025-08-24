@@ -1,9 +1,23 @@
+// User preferences for event recommendations
+export interface UserPreferences {
+  age?: number;
+  interests?: string[];
+  location?: string;
+  familySize?: number;
+  budgetRange?: 'free' | 'low' | 'medium' | 'high';
+  accessibility?: string[];
+  preferredDays?: string[];
+  preferredTimes?: 'morning' | 'afternoon' | 'evening' | 'any';
+  transportation?: 'walking' | 'driving' | 'public' | 'any';
+}
+
 // Authentication types
 export interface User {
   id: number;
   username: string;
   email: string;
   token: string;
+  preferences?: UserPreferences;
 }
 
 export interface AuthContext {
@@ -75,6 +89,7 @@ export interface ChatContext {
   preferences: Record<string, any>;
   session_id?: string | null;
   clear_suggestions?: boolean;
+  chat_history?: Array<{ role: 'user' | 'assistant'; content: string }>;
 }
 
 export interface ChatRequestPayload {

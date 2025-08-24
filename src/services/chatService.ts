@@ -19,7 +19,8 @@ export class ChatService {
           ...context
         },
         session_id: context.session_id || null,
-        clear_suggestions: context.clear_suggestions || false
+        clear_suggestions: context.clear_suggestions || false,
+        chat_history: context.chat_history || []
       };
 
       const response = await this.authFetch.post(CHAT_ENDPOINTS.message, payload);

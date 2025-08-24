@@ -29,6 +29,44 @@
   gap: 1rem;
 }
 
+.clear-chat-btn {
+  background: #dc3545;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  padding: 0.25rem 0.5rem;
+  font-size: 0.8rem;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.clear-chat-btn:hover {
+  background: #c82333;
+}
+
+.clear-chat-btn:active {
+  background: #bd2130;
+}
+
+.preferences-btn {
+  background: #6c757d;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  padding: 0.25rem 0.5rem;
+  font-size: 0.8rem;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.preferences-btn:hover {
+  background: #5a6268;
+}
+
+.preferences-btn:active {
+  background: #545b62;
+}
+
 .toggle-controls {
   display: flex;
   align-items: center;
