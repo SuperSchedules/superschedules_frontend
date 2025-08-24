@@ -42,6 +42,14 @@ const localizer = dateFnsLocalizer({
   locales,
 });
 
+// Simple text cleaner - backend should now provide clean data
+const cleanText = (text: string): string => {
+  if (!text) return '';
+  
+  // Just normalize whitespace and handle any stray newlines
+  return text.replace(/\\n/g, ' ').replace(/\s+/g, ' ').trim();
+};
+
 export default function CalendarPage() {
   const [events, setEvents] = useState<CalendarEvent[]>([]);
   const [selectedEvent, setSelectedEvent] = useState<CalendarEvent | null>(null);
@@ -49,6 +57,8 @@ export default function CalendarPage() {
   const [currentDate, setCurrentDate] = useState(new Date());
   const [rangeStart, setRangeStart] = useState('');
   const [rangeEnd, setRangeEnd] = useState('');
+  const [suggestedEvents, setSuggestedEvents] = useState<any[]>([]);
+  const [loadingSuggestions, setLoadingSuggestions] = useState(false);
 
   const { user, authFetch } = useAuth();
 
@@ -110,8 +120,8 @@ export default function CalendarPage() {
 
         const mapped = res.data.map((e: any): CalendarEvent => ({
           ...e,
-          start: combineDateTime(e.start, e.start_time),
-          end: combineDateTime(e.end, e.end_time),
+          start: e.start_time ? new Date(e.start_time) : new Date(),
+          end: e.end_time ? new Date(e.end_time) : new Date(),
         }));
         setEvents(mapped);
       } catch (err) {
@@ -125,78 +135,109 @@ export default function CalendarPage() {
   return (
     <div className="calendar-page">
       <h1>Calendar</h1>
-      <div className="range-controls">
-        <label>
-          Start
-          <input
-            type="date"
-            value={rangeStart}
-            onChange={(e: React.ChangeEvent<HTMLInputElement>) => setRangeStart(e.target.value)}
-          />
-        </label>
-        <label>
-          End
-          <input
-            type="date"
-            value={rangeEnd}
-            onChange={(e: React.ChangeEvent<HTMLInputElement>) => setRangeEnd(e.target.value)}
-          />
-        </label>
-      </div>
-      <BigCalendar
-        localizer={localizer}
-        events={events}
-        startAccessor="start"
-        endAccessor="end"
-        views={[ 'month', 'week', 'day' ]}
-        view={currentView}
-        date={currentDate}
-        onView={(view) => setCurrentView(view)}
-        onNavigate={(date) => setCurrentDate(date)}
-        style={{ height: 500 }}
-        onSelectEvent={(event) => setSelectedEvent(event)}
-        tooltipAccessor={(event) => {
-          const parts = [event.title];
-          if (event.description) parts.push(event.description);
-          if (event.location) parts.push(event.location);
-          if (event.start && event.end) {
-            parts.push(
-              `${format(event.start, 'Pp')} - ${format(event.end, 'Pp')}`,
-            );
-          }
-          return parts.join('\n');
-        }}
-      />
-      {selectedEvent && (
-        <dialog open className="event-dialog">
-          <h2>{selectedEvent.title}</h2>
-          {selectedEvent.description && <p>{selectedEvent.description}</p>}
-          <button onClick={() => setSelectedEvent(null)}>Close</button>
-        </dialog>
-      )}
       
-      <div className="chat-section">
-        <h2>Event Discovery Chat</h2>
-        <DualChatInterface />
-      </div>
-      
-      <div className="events-list">
-        <h2>Upcoming Events</h2>
-        <div className="events-grid">
-          {events.map((event) => (
-            <div key={event.id} className="event-card">
-              <h3>{event.title}</h3>
-              {event.description && <p>{event.description}</p>}
-              {event.location && <p><strong>Location:</strong> {event.location}</p>}
-              {event.start && !isNaN(event.start.getTime()) && (
-                <p><strong>Date:</strong> {format(event.start, 'PPP')}</p>
-              )}
-              {event.start && event.end && !isNaN(event.start.getTime()) && !isNaN(event.end.getTime()) && (
-                <p><strong>Time:</strong> {format(event.start, 'p')} - {format(event.end, 'p')}</p>
-              )}
-            </div>
-          ))}
+      {/* Chat and Events Side by Side */}
+      <div className="chat-events-container">
+        <div className="chat-section">
+          <h2>Event Discovery Chat</h2>
+          <DualChatInterface 
+            onSuggestedEvents={setSuggestedEvents}
+            onSuggestionsLoading={setLoadingSuggestions}
+            onCalendarUpdate={(newEvents) => {
+              // Add suggested events to the calendar events
+              setEvents(prev => [...prev, ...newEvents]);
+            }}
+            suggestedEvents={suggestedEvents}
+            loadingSuggestions={loadingSuggestions}
+          />
         </div>
+        
+        <div className="events-list">
+          <h2>Recommended Events</h2>
+          {loadingSuggestions ? (
+            <div className="loading-suggestions">
+              <div className="loading-spinner"></div>
+              <span>Finding recommendations...</span>
+            </div>
+          ) : suggestedEvents.length > 0 ? (
+            <div className="events-grid">
+              {suggestedEvents.map((event) => (
+                <div key={event.id} className="event-card">
+                  <h3>{cleanText(event.title)}</h3>
+                  {event.description && <p>{cleanText(event.description)}</p>}
+                  {event.location && <p><strong>Location:</strong> {cleanText(event.location)}</p>}
+                  {event.start_time && (
+                    <p><strong>Date:</strong> {format(new Date(event.start_time), 'PPP')}</p>
+                  )}
+                  {event.start_time && event.end_time && (
+                    <p><strong>Time:</strong> {format(new Date(event.start_time), 'p')} - {format(new Date(event.end_time), 'p')}</p>
+                  )}
+                  {event.url && (
+                    <p><a href={event.url} target="_blank" rel="noopener noreferrer">More info</a></p>
+                  )}
+                </div>
+              ))}
+            </div>
+          ) : (
+            <p className="no-recommendations">
+              Ask me about events and I'll show you personalized recommendations here!
+            </p>
+          )}
+        </div>
+      </div>
+
+      {/* Calendar at Bottom */}
+      <div className="calendar-section">
+        <h2>Calendar View</h2>
+        <div className="range-controls">
+          <label>
+            Start
+            <input
+              type="date"
+              value={rangeStart}
+              onChange={(e: React.ChangeEvent<HTMLInputElement>) => setRangeStart(e.target.value)}
+            />
+          </label>
+          <label>
+            End
+            <input
+              type="date"
+              value={rangeEnd}
+              onChange={(e: React.ChangeEvent<HTMLInputElement>) => setRangeEnd(e.target.value)}
+            />
+          </label>
+        </div>
+        <BigCalendar
+          localizer={localizer}
+          events={events}
+          startAccessor="start"
+          endAccessor="end"
+          views={[ 'month', 'week', 'day' ]}
+          view={currentView}
+          date={currentDate}
+          onView={(view) => setCurrentView(view)}
+          onNavigate={(date) => setCurrentDate(date)}
+          style={{ height: 500 }}
+          onSelectEvent={(event) => setSelectedEvent(event)}
+          tooltipAccessor={(event) => {
+            const parts = [event.title];
+            if (event.description) parts.push(event.description);
+            if (event.location) parts.push(event.location);
+            if (event.start && event.end) {
+              parts.push(
+                `${format(event.start, 'Pp')} - ${format(event.end, 'Pp')}`,
+              );
+            }
+            return parts.join('\n');
+          }}
+        />
+        {selectedEvent && (
+          <dialog open className="event-dialog">
+            <h2>{selectedEvent.title}</h2>
+            {selectedEvent.description && <p>{selectedEvent.description}</p>}
+            <button onClick={() => setSelectedEvent(null)}>Close</button>
+          </dialog>
+        )}
       </div>
     </div>
   );

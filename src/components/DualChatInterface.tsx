@@ -1,9 +1,32 @@
 import { useState, useRef, useEffect } from 'react';
 import { useAuth } from '../auth.js';
 import { ChatService } from '../services/chatService.js';
+import { FastAPIStreamingChatService, MockStreamingChatService } from '../services/streamingChatService.js';
 import { AnalyticsService } from '../services/analyticsService.js';
 import type { DualChatInterfaceProps, ChatMessage, Event } from '../types/index.js';
 import './DualChatInterface.css';
+
+// Enhanced text formatter that preserves line breaks and formatting
+const formatMessageContent = (text: string): string => {
+  if (!text) return '';
+  
+  // First decode HTML entities and strip most HTML tags but preserve structure
+  const tempDiv = document.createElement('div');
+  tempDiv.innerHTML = text;
+  let formatted = tempDiv.textContent || tempDiv.innerText || '';
+  
+  // Preserve line breaks and bullet point formatting
+  formatted = formatted.replace(/\n/g, '\n');
+  
+  return formatted;
+};
+
+// Simple HTML to text converter for backward compatibility
+const htmlToText = (html: string): string => {
+  const tempDiv = document.createElement('div');
+  tempDiv.innerHTML = html;
+  return tempDiv.textContent || tempDiv.innerText || '';
+};
 
 export default function DualChatInterface({ 
   onSuggestedEvents, 
@@ -25,20 +48,43 @@ export default function DualChatInterface({
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [sessionId, setSessionId] = useState<string | null>(null);
   const [selectedModel, setSelectedModel] = useState<'A' | 'B' | null>(null); // Track which model user prefers
+  const [useStreaming, setUseStreaming] = useState<boolean>(true); // Toggle for streaming mode
+  const [useABTesting, setUseABTesting] = useState<boolean>(false); // Toggle for A/B testing mode
+  const [streamingCleanup, setStreamingCleanup] = useState<(() => void) | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const { authFetch } = useAuth();
   const [chatService] = useState(() => new ChatService(authFetch));
+  const [streamingService] = useState(() => {
+    // Try FastAPI first, fallback to mock for development
+    try {
+      return new FastAPIStreamingChatService(authFetch);
+    } catch (error) {
+      console.warn('FastAPI streaming service not available, using mock service');
+      return new MockStreamingChatService();
+    }
+  });
   const [analyticsService] = useState(() => new AnalyticsService(authFetch));
 
+  const chatMessagesRef = useRef<HTMLDivElement>(null);
+  
   const scrollToBottom = () => {
-    if (messagesEndRef.current && typeof messagesEndRef.current.scrollIntoView === 'function') {
-      messagesEndRef.current.scrollIntoView({ behavior: 'smooth' });
+    if (chatMessagesRef.current) {
+      chatMessagesRef.current.scrollTop = chatMessagesRef.current.scrollHeight;
     }
   };
 
   useEffect(() => {
     scrollToBottom();
   }, [messages]);
+
+  // Cleanup streaming connections on unmount
+  useEffect(() => {
+    return () => {
+      if (streamingCleanup) {
+        streamingCleanup();
+      }
+    };
+  }, [streamingCleanup]);
 
   const handleSendMessage = async () => {
     if (!inputMessage.trim() || isLoading) return;
@@ -54,8 +100,184 @@ export default function DualChatInterface({
     setInputMessage('');
     setIsLoading(true);
 
+    // Clean up any existing streaming connection
+    if (streamingCleanup) {
+      streamingCleanup();
+      setStreamingCleanup(null);
+    }
+
+    if (useStreaming) {
+      await handleStreamingMessage(userMessage.content);
+    } else {
+      await handleRegularMessage(userMessage.content);
+    }
+  };
+
+  const handleStreamingMessage = async (message: string) => {
+    // Create placeholder message that will be updated with streaming content
+    const streamingMessageId = Date.now() + 1000;
+    const streamingMessage = {
+      id: streamingMessageId,
+      type: 'dual-assistant',
+      modelA: {
+        response: '',
+        isComplete: false,
+        suggestedEventIds: [],
+        followUpQuestions: [],
+        responseTimeMs: 0
+      },
+      modelB: {
+        response: '',
+        isComplete: false,
+        suggestedEventIds: [],
+        followUpQuestions: [],
+        responseTimeMs: 0
+      },
+      timestamp: new Date(),
+      selectedModel: null
+    };
+
+    setMessages(prev => [...prev, streamingMessage]);
+
+    const cleanup = streamingService.startChatStream(
+      message,
+      // Model A token handler
+      (token: string, done: boolean, metadata?: any) => {
+        setMessages(prev => prev.map(msg => 
+          msg.id === streamingMessageId 
+            ? {
+                ...msg,
+                modelA: {
+                  ...msg.modelA,
+                  response: done ? msg.modelA.response : msg.modelA.response + token,
+                  isComplete: done,
+                  suggestedEventIds: metadata?.suggested_event_ids || msg.modelA.suggestedEventIds,
+                  followUpQuestions: metadata?.follow_up_questions || msg.modelA.followUpQuestions,
+                  responseTimeMs: metadata?.response_time_ms || msg.modelA.responseTimeMs
+                }
+              }
+            : msg
+        ));
+        
+        if (done) {
+          checkStreamingComplete(streamingMessageId);
+        }
+      },
+      // Model B token handler  
+      (token: string, done: boolean, metadata?: any) => {
+        setMessages(prev => prev.map(msg => 
+          msg.id === streamingMessageId 
+            ? {
+                ...msg,
+                modelB: {
+                  ...msg.modelB,
+                  response: done ? msg.modelB.response : msg.modelB.response + token,
+                  isComplete: done,
+                  suggestedEventIds: metadata?.suggested_event_ids || msg.modelB.suggestedEventIds,
+                  followUpQuestions: metadata?.follow_up_questions || msg.modelB.followUpQuestions,
+                  responseTimeMs: metadata?.response_time_ms || msg.modelB.responseTimeMs
+                }
+              }
+            : msg
+        ));
+        
+        if (done) {
+          checkStreamingComplete(streamingMessageId);
+        }
+      },
+      // Error handler
+      (error: string) => {
+        console.error('Streaming error:', error);
+        const errorMessage = {
+          id: Date.now() + 2000,
+          type: 'assistant',
+          content: `Sorry, I encountered an error with streaming: ${error}. Please try again.`,
+          timestamp: new Date()
+        };
+        setMessages(prev => [...prev, errorMessage]);
+        setIsLoading(false);
+      },
+      // Context
+      {
+        location: null,
+        preferences: {},
+        session_id: sessionId
+      },
+      // Single model mode (opposite of A/B testing)
+      !useABTesting
+    );
+
+    setStreamingCleanup(() => cleanup);
+  };
+
+  const checkStreamingComplete = (messageId: number) => {
+    setMessages(prev => {
+      const message = prev.find(msg => msg.id === messageId);
+      if (message && message.type === 'dual-assistant' && 
+          message.modelA.isComplete && message.modelB.isComplete) {
+        setIsLoading(false);
+      }
+      return prev;
+    });
+  };
+
+  // Effect to handle suggested events after streaming is complete
+  useEffect(() => {
+    const latestMessage = messages[messages.length - 1];
+    if (latestMessage && 
+        latestMessage.type === 'dual-assistant' && 
+        latestMessage.modelA.isComplete && 
+        latestMessage.modelB.isComplete) {
+      
+      // Both models are complete, handle suggested events
+      const allSuggestedIds = [
+        ...latestMessage.modelA.suggestedEventIds,
+        ...latestMessage.modelB.suggestedEventIds
+      ].filter((id, index, self) => self.indexOf(id) === index);
+      
+      console.log('Processing suggested events:', allSuggestedIds);
+      
+      if (allSuggestedIds.length > 0) {
+        handleSuggestedEvents(allSuggestedIds);
+      }
+    }
+  }, [messages]);
+
+  const handleSuggestedEvents = async (suggestedIds: (string | number)[]) => {
+    console.log('handleSuggestedEvents called with:', suggestedIds);
+    onSuggestionsLoading && onSuggestionsLoading(true);
+    
     try {
-      const response = await chatService.sendMessage(userMessage.content, {
+      const eventsResponse = await chatService.fetchEventsByIds(suggestedIds);
+      console.log('Events response:', eventsResponse);
+      if (eventsResponse.success && eventsResponse.data.length > 0) {
+        console.log('Setting suggested events:', eventsResponse.data);
+        onSuggestedEvents(eventsResponse.data);
+        onSuggestionsLoading && onSuggestionsLoading(false);
+      } else if (import.meta.env.DEV) {
+        console.log('Using mock events for:', suggestedIds);
+        const mockEvents = chatService.generateMockEventsFromIds(suggestedIds);
+        onSuggestedEvents(mockEvents);
+        onSuggestionsLoading && onSuggestionsLoading(false);
+      } else {
+        console.log('No events found, clearing loading');
+        onSuggestionsLoading && onSuggestionsLoading(false);
+      }
+    } catch (error) {
+      console.error('Error fetching suggested events:', error);
+      if (import.meta.env.DEV) {
+        console.log('Using mock events due to error:', suggestedIds);
+        const mockEvents = chatService.generateMockEventsFromIds(suggestedIds);
+        onSuggestedEvents(mockEvents);
+      } else {
+        onSuggestionsLoading && onSuggestionsLoading(false);
+      }
+    }
+  };
+
+  const handleRegularMessage = async (message: string) => {
+    try {
+      const response = await chatService.sendMessage(message, {
         location: null,
         preferences: {},
         session_id: sessionId,
@@ -91,34 +313,7 @@ export default function DualChatInterface({
         ].filter((id, index, self) => self.indexOf(id) === index); // Remove duplicates
         
         if (allSuggestedIds.length > 0) {
-          onSuggestionsLoading && onSuggestionsLoading(true);
-          
-          try {
-            const eventsResponse = await chatService.fetchEventsByIds(allSuggestedIds);
-            if (eventsResponse.success && eventsResponse.data.length > 0) {
-              onSuggestedEvents(eventsResponse.data);
-            } else if (import.meta.env.DEV) {
-              const mockEvents = chatService.generateMockEventsFromIds(allSuggestedIds);
-              onSuggestedEvents(mockEvents);
-            } else {
-              onSuggestionsLoading && onSuggestionsLoading(false);
-            }
-          } catch (error) {
-            console.error('Error fetching suggested events:', error);
-            if (import.meta.env.DEV) {
-              const mockEvents = chatService.generateMockEventsFromIds(allSuggestedIds);
-              onSuggestedEvents(mockEvents);
-            } else {
-              const errorMessage = {
-                id: Date.now() + 2,
-                type: 'assistant',
-                content: 'I found some relevant events, but there was an issue loading the details.',
-                timestamp: new Date()
-              };
-              setMessages(prev => [...prev, errorMessage]);
-              onSuggestionsLoading && onSuggestionsLoading(false);
-            }
-          }
+          await handleSuggestedEvents(allSuggestedIds);
         } else if (response.data.clearPreviousSuggestions) {
           onSuggestedEvents([]);
         }
@@ -196,28 +391,89 @@ export default function DualChatInterface({
   return (
     <div className="dual-chat-interface">
       <div className="chat-header">
-        <h3>Event Assistant (A/B Testing)</h3>
-        <div className="model-legend">
-          <span className="model-a-label">Model A</span>
-          <span className="model-b-label">Model B</span>
+        <h3>Event Assistant</h3>
+        <div className="header-controls">
+          <div className="toggle-controls">
+            <label>
+              <input
+                type="checkbox"
+                checked={useStreaming}
+                onChange={(e) => setUseStreaming(e.target.checked)}
+              />
+              🚀 Streaming Mode
+            </label>
+            <label>
+              <input
+                type="checkbox"
+                checked={useABTesting}
+                onChange={(e) => setUseABTesting(e.target.checked)}
+              />
+              🔬 A/B Testing
+            </label>
+          </div>
+          {useABTesting && (
+            <div className="model-legend">
+              <span className="model-a-label">Model A (8B)</span>
+              <span className="model-b-label">Model B (3B)</span>
+            </div>
+          )}
         </div>
       </div>
       
-      <div className="chat-messages">
+      <div className="chat-messages" ref={chatMessagesRef}>
         {messages.map((message) => {
           if (message.type === 'dual-assistant') {
+            // Single model mode - show only Model B (3B) unless A/B testing is enabled
+            if (!useABTesting) {
+              return (
+                <div key={message.id} className="message assistant">
+                  <div className="model-header-single">
+                    <span className="model-name">{message.modelB.modelName || 'Model B (3B)'}</span>
+                    <span className="response-time">{message.modelB.responseTimeMs || 0}ms</span>
+                    {!message.modelB.isComplete && useStreaming && <span className="streaming-indicator">⏳</span>}
+                    {message.modelB.success === false && <span className="error-indicator">❌</span>}
+                  </div>
+                  <div className="message-content formatted-content">
+                    {useStreaming ? (
+                      <pre className="formatted-text">
+                        {formatMessageContent(message.modelB.response || '')}
+                        {!message.modelB.isComplete && <span className="typing-cursor">|</span>}
+                      </pre>
+                    ) : (
+                      message.modelB.success ? 
+                        <pre className="formatted-text">{formatMessageContent(message.modelB.content || '')}</pre> : 
+                        `Error: ${message.modelB.error}`
+                    )}
+                  </div>
+                  <div className="message-time">
+                    {formatTime(message.timestamp)}
+                  </div>
+                </div>
+              );
+            }
+            
+            // A/B testing mode - show both models
             return (
               <div key={message.id} className="dual-message-container">
                 <div className="dual-responses">
                   <div className={`model-response model-a ${message.selectedModel === 'A' ? 'selected' : ''}`}>
                     <div className="model-header">
-                      <span className="model-name">{message.modelA.modelName}</span>
-                      <span className="response-time">{message.modelA.responseTimeMs}ms</span>
-                      {!message.modelA.success && <span className="error-indicator">❌</span>}
+                      <span className="model-name">{message.modelA.modelName || 'Model A (8B)'}</span>
+                      <span className="response-time">{message.modelA.responseTimeMs || 0}ms</span>
+                      {!message.modelA.isComplete && useStreaming && <span className="streaming-indicator">⏳</span>}
+                      {message.modelA.success === false && <span className="error-indicator">❌</span>}
                     </div>
                     <div className="message-content">
-                      {message.modelA.success ? message.modelA.content : 
-                        `Error: ${message.modelA.error}`}
+                      {useStreaming ? (
+                        <pre className="formatted-text">
+                          {formatMessageContent(message.modelA.response || '')}
+                          {!message.modelA.isComplete && <span className="typing-cursor">|</span>}
+                        </pre>
+                      ) : (
+                        message.modelA.success ? 
+                          <pre className="formatted-text">{formatMessageContent(message.modelA.content || '')}</pre> : 
+                          `Error: ${message.modelA.error}`
+                      )}
                     </div>
                     {message.modelA.success && (
                       <button 
@@ -232,13 +488,22 @@ export default function DualChatInterface({
                   
                   <div className={`model-response model-b ${message.selectedModel === 'B' ? 'selected' : ''}`}>
                     <div className="model-header">
-                      <span className="model-name">{message.modelB.modelName}</span>
-                      <span className="response-time">{message.modelB.responseTimeMs}ms</span>
-                      {!message.modelB.success && <span className="error-indicator">❌</span>}
+                      <span className="model-name">{message.modelB.modelName || 'Model B (3B)'}</span>
+                      <span className="response-time">{message.modelB.responseTimeMs || 0}ms</span>
+                      {!message.modelB.isComplete && useStreaming && <span className="streaming-indicator">⏳</span>}
+                      {message.modelB.success === false && <span className="error-indicator">❌</span>}
                     </div>
                     <div className="message-content">
-                      {message.modelB.success ? message.modelB.content : 
-                        `Error: ${message.modelB.error}`}
+                      {useStreaming ? (
+                        <pre className="formatted-text">
+                          {formatMessageContent(message.modelB.response || '')}
+                          {!message.modelB.isComplete && <span className="typing-cursor">|</span>}
+                        </pre>
+                      ) : (
+                        message.modelB.success ? 
+                          <pre className="formatted-text">{formatMessageContent(message.modelB.content || '')}</pre> : 
+                          `Error: ${message.modelB.error}`
+                      )}
                     </div>
                     {message.modelB.success && (
                       <button 
@@ -264,7 +529,9 @@ export default function DualChatInterface({
               className={`message ${message.type}`}
             >
               <div className="message-content">
-                {message.content}
+                <pre className="formatted-text">
+                  {formatMessageContent(message.content || '')}
+                </pre>
               </div>
               <div className="message-time">
                 {formatTime(message.timestamp)}

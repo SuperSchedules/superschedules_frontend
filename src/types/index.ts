@@ -40,11 +40,13 @@ export interface Event {
 
 // Chat/LLM types
 export interface ModelResponse {
-  modelName: string;
-  content: string;
+  modelName?: string;
+  content?: string;
+  response?: string; // For streaming responses
   responseTimeMs: number;
-  success: boolean;
-  error: string | null;
+  success?: boolean;
+  isComplete?: boolean; // For streaming completion status
+  error?: string | null;
   suggestedEventIds: string[];
   followUpQuestions: string[];
 }
