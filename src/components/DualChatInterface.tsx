@@ -1,11 +1,11 @@
 import { useState, useRef, useEffect } from 'react';
-import { useAuth } from '../auth.js';
-import { useUserPreferences } from '../hooks/useUserPreferences.js';
-import { ChatService } from '../services/chatService.js';
-import { FastAPIStreamingChatService, MockStreamingChatService } from '../services/streamingChatService.js';
-import { AnalyticsService } from '../services/analyticsService.js';
-import UserPreferences from './UserPreferences.js';
-import type { DualChatInterfaceProps, ChatMessage, Event } from '../types/index.js';
+import { useAuth } from '../auth';
+import { useUserPreferences } from '../hooks/useUserPreferences';
+import { ChatService } from '../services/chatService';
+import { FastAPIStreamingChatService, MockStreamingChatService } from '../services/streamingChatService';
+import { AnalyticsService } from '../services/analyticsService';
+import UserPreferences from './UserPreferences';
+import type { DualChatInterfaceProps, ChatMessage, Event } from '../types/index';
 import './DualChatInterface.css';
 import './UserPreferences.css';
 

@@ -9,7 +9,7 @@ import {
   ReactNode,
 } from 'react';
 import axios, { AxiosInstance, AxiosRequestConfig, AxiosResponse } from 'axios';
-import { AUTH_ENDPOINTS } from './constants/api.js';
+import { AUTH_ENDPOINTS } from './constants/api';
 
 interface JWTPayload {
   exp?: number;

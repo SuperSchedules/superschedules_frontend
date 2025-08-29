@@ -1,7 +1,7 @@
 import { render, screen, fireEvent, cleanup } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import TopBar from '../components/TopBar';
-import { AuthProvider, AuthContext } from '../auth.jsx';
+import { AuthProvider, AuthContext } from '../auth';
 import { describe, it, expect, afterEach, vi } from 'vitest';
 
 function renderWithAuth(ui, { user } = {}) {

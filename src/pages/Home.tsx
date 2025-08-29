@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
-import { useAuth } from '../auth.jsx';
-import { SOURCES_ENDPOINTS } from '../constants/api.js';
+import { useAuth } from '../auth';
+import { SOURCES_ENDPOINTS } from '../constants/api';
 import './Home.css';
 
 interface Source {

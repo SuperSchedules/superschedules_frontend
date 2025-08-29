@@ -2,7 +2,7 @@ import { render, screen, fireEvent, waitFor, cleanup } from '@testing-library/re
 import { MemoryRouter, Routes, Route } from 'react-router-dom';
 import { describe, it, expect, vi, afterEach } from 'vitest';
 import ResetPassword from '../pages/ResetPassword';
-import { AUTH_ENDPOINTS } from '../constants/api.js';
+import { AUTH_ENDPOINTS } from '../constants/api';
 
 function renderPage() {
   return render(

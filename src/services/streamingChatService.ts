@@ -1,4 +1,4 @@
-import { AuthFetch } from '../types/index.js';
+import { AuthFetch } from '../types/index';
 
 export interface StreamingChatService {
   startChatStream(

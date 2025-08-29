@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { useAuth } from '../auth.jsx';
-import ThemeToggle from './ThemeToggle.jsx';
+import { useAuth } from '../auth';
+import ThemeToggle from './ThemeToggle';
 import './TopBar.css';
 
 interface TopBarProps {
@@ -37,11 +37,10 @@ export default function TopBar({ onToggleSidebar }: TopBarProps) {
       </button>
       <h1 className="navbar-brand mb-0">SuperSchedules</h1>
       <div className="ms-auto d-flex align-items-center gap-2">
-        <ThemeToggle />
         {user ? (
           <div className="user-menu" ref={menuRef}>
             <button
-              className="btn btn-outline"
+              className="btn-login-large"
               aria-label="settings"
               onClick={() => setOpen((o) => !o)}
             >
@@ -51,6 +50,9 @@ export default function TopBar({ onToggleSidebar }: TopBarProps) {
               <ul className="menu list-unstyled rounded p-2">
                 <li>Account</li>
                 <li>
+                  <ThemeToggle />
+                </li>
+                <li>
                   <button className="btn btn-link p-0" onClick={logout}>
                     Log out
                   </button>
@@ -59,9 +61,27 @@ export default function TopBar({ onToggleSidebar }: TopBarProps) {
             )}
           </div>
         ) : (
-          <Link className="btn btn-outline fs-5" to="/login">
-            Login
-          </Link>
+          <div className="user-menu" ref={menuRef}>
+            <button
+              className="btn-login-large"
+              aria-label="login"
+              onClick={() => setOpen((o) => !o)}
+            >
+              ⚙️
+            </button>
+            {open && (
+              <ul className="menu list-unstyled rounded p-2">
+                <li>
+                  <ThemeToggle />
+                </li>
+                <li>
+                  <Link className="btn btn-link p-0" to="/login">
+                    Login
+                  </Link>
+                </li>
+              </ul>
+            )}
+          </div>
         )}
       </div>
     </header>

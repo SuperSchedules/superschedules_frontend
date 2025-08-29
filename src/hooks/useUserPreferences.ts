@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import type { UserPreferences } from '../types/index.js';
+import type { UserPreferences } from '../types/index';
 
 const PREFERENCES_STORAGE_KEY = 'superschedules_user_preferences';
 

@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
-import { AUTH_ENDPOINTS } from '../constants/api.js';
+import { AUTH_ENDPOINTS } from '../constants/api';
 
 export default function ResetPassword() {
   const [searchParams] = useSearchParams();

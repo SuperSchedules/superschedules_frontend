@@ -1,7 +1,7 @@
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import { useState } from 'react';
-import { AuthProvider } from './auth.jsx';
-import { ThemeProvider } from './contexts/ThemeContext.jsx';
+import { AuthProvider } from './auth';
+import { ThemeProvider } from './contexts/ThemeContext';
 import TopBar from './components/TopBar';
 import Sidebar from './components/Sidebar';
 import Home from './pages/Home';

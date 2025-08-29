@@ -1,6 +1,6 @@
 import { useState } from 'react';
-import { useUserPreferences } from '../hooks/useUserPreferences.js';
-import type { UserPreferences as UserPreferencesType } from '../types/index.js';
+import { useUserPreferences } from '../hooks/useUserPreferences';
+import type { UserPreferences as UserPreferencesType } from '../types/index';
 
 interface UserPreferencesProps {
   isOpen: boolean;

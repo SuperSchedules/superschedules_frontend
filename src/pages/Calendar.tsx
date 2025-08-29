@@ -14,8 +14,8 @@ import {
 import { enUS } from 'date-fns/locale';
 import 'react-big-calendar/lib/css/react-big-calendar.css';
 import './Calendar.css';
-import { EVENTS_ENDPOINTS } from '../constants/api.js';
-import { useAuth } from '../auth.jsx';
+import { EVENTS_ENDPOINTS } from '../constants/api';
+import { useAuth } from '../auth';
 import DualChatInterface from '../components/DualChatInterface';
 
 interface CalendarEvent {
@@ -132,27 +132,33 @@ export default function CalendarPage() {
     loadEvents();
   }, [user, authFetch, currentView, currentDate, rangeStart, rangeEnd]);
 
+  const [expandedEvent, setExpandedEvent] = useState<number | null>(null);
+
+  const toggleEventExpansion = (eventId: number) => {
+    setExpandedEvent(expandedEvent === eventId ? null : eventId);
+  };
+
   return (
-    <div className="calendar-page">
-      <h1>Calendar</h1>
-      
-      {/* Chat and Events Side by Side */}
-      <div className="chat-events-container">
-        <div className="chat-section">
-          <h2>Event Discovery Chat</h2>
-          <DualChatInterface 
-            onSuggestedEvents={setSuggestedEvents}
-            onSuggestionsLoading={setLoadingSuggestions}
-            onCalendarUpdate={(newEvents) => {
-              // Add suggested events to the calendar events
-              setEvents(prev => [...prev, ...newEvents]);
-            }}
-            suggestedEvents={suggestedEvents}
-            loadingSuggestions={loadingSuggestions}
-          />
-        </div>
+    <div className="calendar-page-new">
+      {/* Chat Section at Top */}
+      <div className="chat-section-separate">
+        <DualChatInterface 
+          onSuggestedEvents={setSuggestedEvents}
+          onSuggestionsLoading={setLoadingSuggestions}
+          onCalendarUpdate={(newEvents) => {
+            // Add suggested events to the calendar events
+            setEvents(prev => [...prev, ...newEvents]);
+          }}
+          suggestedEvents={suggestedEvents}
+          loadingSuggestions={loadingSuggestions}
+        />
+      </div>
+
+      {/* Main Content - Two Column Layout */}
+      <div className="main-content">
         
-        <div className="events-list">
+        {/* Left Side - Compact Event List (1/3 max width) */}
+        <div className="events-sidebar">
           <h2>Recommended Events</h2>
           {loadingSuggestions ? (
             <div className="loading-suggestions">
@@ -160,84 +166,115 @@ export default function CalendarPage() {
               <span>Finding recommendations...</span>
             </div>
           ) : suggestedEvents.length > 0 ? (
-            <div className="events-grid">
+            <div className="compact-events-list">
               {suggestedEvents.map((event) => (
-                <div key={event.id} className="event-card">
-                  <h3>{cleanText(event.title)}</h3>
-                  {event.description && <p>{cleanText(event.description)}</p>}
-                  {event.location && <p><strong>Location:</strong> {cleanText(event.location)}</p>}
-                  {event.start_time && (
-                    <p><strong>Date:</strong> {format(new Date(event.start_time), 'PPP')}</p>
-                  )}
-                  {event.start_time && event.end_time && (
-                    <p><strong>Time:</strong> {format(new Date(event.start_time), 'p')} - {format(new Date(event.end_time), 'p')}</p>
-                  )}
-                  {event.url && (
-                    <p><a href={event.url} target="_blank" rel="noopener noreferrer">More info</a></p>
+                <div 
+                  key={event.id} 
+                  className={`compact-event-card ${expandedEvent === event.id ? 'expanded' : ''}`}
+                  onClick={() => toggleEventExpansion(event.id)}
+                >
+                  {/* Always visible: date, title, truncated description */}
+                  <div className="event-header">
+                    {event.start_time && (
+                      <div className="event-date">
+                        {format(new Date(event.start_time), 'MMM d')}
+                        {event.start_time && event.end_time && (
+                          <span className="event-time">
+                            {format(new Date(event.start_time), 'h:mm a')}
+                          </span>
+                        )}
+                      </div>
+                    )}
+                    <div className="event-title">{cleanText(event.title)}</div>
+                    {event.description && (
+                      <div className="event-description-preview">
+                        {cleanText(event.description).length > 80 
+                          ? `${cleanText(event.description).substring(0, 80)}...`
+                          : cleanText(event.description)
+                        }
+                      </div>
+                    )}
+                  </div>
+                  
+                  {/* Expandable details */}
+                  {expandedEvent === event.id && (
+                    <div className="event-details">
+                      {event.description && (
+                        <p><strong>Full Description:</strong> {cleanText(event.description)}</p>
+                      )}
+                      {event.location && (
+                        <p><strong>Location:</strong> {cleanText(event.location)}</p>
+                      )}
+                      {event.start_time && event.end_time && (
+                        <p><strong>Time:</strong> {format(new Date(event.start_time), 'p')} - {format(new Date(event.end_time), 'p')}</p>
+                      )}
+                      {event.url && (
+                        <p><a href={event.url} target="_blank" rel="noopener noreferrer">More info</a></p>
+                      )}
+                    </div>
                   )}
                 </div>
               ))}
             </div>
           ) : (
             <p className="no-recommendations">
-              Ask me about events and I'll show you personalized recommendations here!
+              Ask me about events and I'll show personalized recommendations here!
             </p>
           )}
         </div>
-      </div>
 
-      {/* Calendar at Bottom */}
-      <div className="calendar-section">
-        <h2>Calendar View</h2>
-        <div className="range-controls">
-          <label>
-            Start
-            <input
-              type="date"
-              value={rangeStart}
-              onChange={(e: React.ChangeEvent<HTMLInputElement>) => setRangeStart(e.target.value)}
-            />
-          </label>
-          <label>
-            End
-            <input
-              type="date"
-              value={rangeEnd}
-              onChange={(e: React.ChangeEvent<HTMLInputElement>) => setRangeEnd(e.target.value)}
-            />
-          </label>
+        {/* Right Side - Calendar */}
+        <div className="calendar-main">
+          <div className="range-controls">
+            <label>
+              Start
+              <input
+                type="date"
+                value={rangeStart}
+                onChange={(e: React.ChangeEvent<HTMLInputElement>) => setRangeStart(e.target.value)}
+              />
+            </label>
+            <label>
+              End
+              <input
+                type="date"
+                value={rangeEnd}
+                onChange={(e: React.ChangeEvent<HTMLInputElement>) => setRangeEnd(e.target.value)}
+              />
+            </label>
+          </div>
+          <BigCalendar
+            localizer={localizer}
+            events={events}
+            startAccessor="start"
+            endAccessor="end"
+            views={[ 'month', 'week', 'day' ]}
+            view={currentView}
+            date={currentDate}
+            onView={(view) => setCurrentView(view)}
+            onNavigate={(date) => setCurrentDate(date)}
+            style={{ height: 500 }}
+            onSelectEvent={(event) => setSelectedEvent(event)}
+            tooltipAccessor={(event) => {
+              const parts = [event.title];
+              if (event.description) parts.push(event.description);
+              if (event.location) parts.push(event.location);
+              if (event.start && event.end) {
+                parts.push(
+                  `${format(event.start, 'Pp')} - ${format(event.end, 'Pp')}`,
+                );
+              }
+              return parts.join('\n');
+            }}
+          />
+          {selectedEvent && (
+            <dialog open className="event-dialog">
+              <h2>{selectedEvent.title}</h2>
+              {selectedEvent.description && <p>{selectedEvent.description}</p>}
+              <button onClick={() => setSelectedEvent(null)}>Close</button>
+            </dialog>
+          )}
         </div>
-        <BigCalendar
-          localizer={localizer}
-          events={events}
-          startAccessor="start"
-          endAccessor="end"
-          views={[ 'month', 'week', 'day' ]}
-          view={currentView}
-          date={currentDate}
-          onView={(view) => setCurrentView(view)}
-          onNavigate={(date) => setCurrentDate(date)}
-          style={{ height: 500 }}
-          onSelectEvent={(event) => setSelectedEvent(event)}
-          tooltipAccessor={(event) => {
-            const parts = [event.title];
-            if (event.description) parts.push(event.description);
-            if (event.location) parts.push(event.location);
-            if (event.start && event.end) {
-              parts.push(
-                `${format(event.start, 'Pp')} - ${format(event.end, 'Pp')}`,
-              );
-            }
-            return parts.join('\n');
-          }}
-        />
-        {selectedEvent && (
-          <dialog open className="event-dialog">
-            <h2>{selectedEvent.title}</h2>
-            {selectedEvent.description && <p>{selectedEvent.description}</p>}
-            <button onClick={() => setSelectedEvent(null)}>Close</button>
-          </dialog>
-        )}
       </div>
     </div>
   );
