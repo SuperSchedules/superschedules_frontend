@@ -4,7 +4,7 @@ export interface UserPreferences {
   interests?: string[];
   location?: string;
   familySize?: number;
-  budgetRange?: 'free' | 'low' | 'medium' | 'high';
+  budgetRange?: ('free' | 'low' | 'medium' | 'high')[];
   accessibility?: string[];
   preferredDays?: string[];
   preferredTimes?: 'morning' | 'afternoon' | 'evening' | 'any';
@@ -47,6 +47,7 @@ export interface Event {
   suggested?: boolean;
   url?: string;
   tags?: string[];
+  metadata_tags?: string[];
   age_range?: string;
   price?: string;
   organizer?: string;
@@ -90,6 +91,10 @@ export interface ChatContext {
   session_id?: string | null;
   clear_suggestions?: boolean;
   chat_history?: Array<{ role: 'user' | 'assistant'; content: string }>;
+  date_range?: {
+    from: string;
+    to: string;
+  };
 }
 
 export interface ChatRequestPayload {
@@ -143,13 +148,11 @@ export interface AnalyticsSummary {
 export interface ChatInterfaceProps {
   onSuggestedEvents: (events: Event[]) => void;
   onSuggestionsLoading?: (loading: boolean) => void;
-  onCalendarUpdate?: (event: Event) => void;
   suggestedEvents?: Event[];
   loadingSuggestions?: boolean;
   isVisible?: boolean;
 }
 
-export interface DualChatInterfaceProps extends ChatInterfaceProps {}
 
 // API response types
 export interface ApiResponse<T = any> {

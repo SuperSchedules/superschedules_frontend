@@ -16,12 +16,6 @@
   min-height: 100vh;
 }
 
-/* Main content - two column layout */
-.main-content {
-  display: flex;
-  gap: 1.5rem;
-  flex: 1;
-}
 
 /* Compact Events Sidebar - narrower with no border */
 .events-sidebar {
@@ -127,7 +121,15 @@
   text-decoration: underline;
 }
 
-/* Calendar main section - takes remaining space */
+/* Calendar main section - full width */
+.calendar-main-fullwidth {
+  background-color: var(--card-bg-color);
+  border-radius: 0.375rem;
+  padding: 1rem;
+  min-height: 600px;
+}
+
+/* Calendar main section - takes remaining space (legacy for other layouts) */
 .calendar-main {
   flex: 1;
   background-color: var(--card-bg-color);

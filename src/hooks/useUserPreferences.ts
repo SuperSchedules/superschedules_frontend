@@ -7,14 +7,31 @@ const getDefaultPreferences = (): UserPreferences => ({
   interests: [],
   preferredTimes: 'any',
   transportation: 'any',
-  budgetRange: 'medium'
+  budgetRange: ['free', 'low'] // Default to free and low cost events
 });
 
 export const useUserPreferences = () => {
   const [preferences, setPreferences] = useState<UserPreferences>(() => {
     try {
       const stored = localStorage.getItem(PREFERENCES_STORAGE_KEY);
-      return stored ? { ...getDefaultPreferences(), ...JSON.parse(stored) } : getDefaultPreferences();
+      if (stored) {
+        const parsed = JSON.parse(stored);
+        
+        // Handle backward compatibility: convert old string budgetRange to array
+        if (parsed.budgetRange && typeof parsed.budgetRange === 'string') {
+          parsed.budgetRange = [parsed.budgetRange];
+        }
+        
+        // Ensure budgetRange is always an array, even if undefined in stored preferences
+        const defaults = getDefaultPreferences();
+        const merged = { ...defaults, ...parsed };
+        if (!merged.budgetRange || merged.budgetRange.length === 0) {
+          merged.budgetRange = defaults.budgetRange;
+        }
+        
+        return merged;
+      }
+      return getDefaultPreferences();
     } catch (error) {
       console.warn('Failed to load user preferences:', error);
       return getDefaultPreferences();
@@ -59,8 +76,17 @@ export const useUserPreferences = () => {
       context.push(`Interests: ${preferences.interests.join(', ')}`);
     }
     
-    if (preferences.budgetRange && preferences.budgetRange !== 'medium') {
-      context.push(`Budget: ${preferences.budgetRange}`);
+    if (preferences.budgetRange && preferences.budgetRange.length > 0) {
+      const budgetLabels = preferences.budgetRange.map(range => {
+        switch (range) {
+          case 'free': return 'Free';
+          case 'low': return 'Low cost ($1-25)';
+          case 'medium': return 'Medium cost ($25-75)';
+          case 'high': return 'High cost ($75+)';
+          default: return range;
+        }
+      });
+      context.push(`Budget: ${budgetLabels.join(', ')}`);
     }
     
     if (preferences.accessibility && preferences.accessibility.length > 0) {

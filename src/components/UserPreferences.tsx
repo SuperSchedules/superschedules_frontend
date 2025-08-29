@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useUserPreferences } from '../hooks/useUserPreferences';
 import type { UserPreferences as UserPreferencesType } from '../types/index';
 
@@ -20,34 +20,35 @@ const ACCESSIBILITY_OPTIONS = [
 
 export default function UserPreferences({ isOpen, onClose }: UserPreferencesProps) {
   const { preferences, updatePreferences, resetPreferences } = useUserPreferences();
-  const [localPrefs, setLocalPrefs] = useState<UserPreferencesType>(preferences);
 
   if (!isOpen) return null;
 
-  const handleSave = () => {
-    updatePreferences(localPrefs);
-    onClose();
-  };
-
-  const handleCancel = () => {
-    setLocalPrefs(preferences);
+  const handleClose = () => {
     onClose();
   };
 
   const toggleInterest = (interest: string) => {
-    const interests = localPrefs.interests || [];
+    const interests = preferences.interests || [];
     const updated = interests.includes(interest)
       ? interests.filter(i => i !== interest)
       : [...interests, interest];
-    setLocalPrefs({ ...localPrefs, interests: updated });
+    updatePreferences({ interests: updated });
   };
 
   const toggleAccessibility = (option: string) => {
-    const accessibility = localPrefs.accessibility || [];
+    const accessibility = preferences.accessibility || [];
     const updated = accessibility.includes(option)
       ? accessibility.filter(a => a !== option)
       : [...accessibility, option];
-    setLocalPrefs({ ...localPrefs, accessibility: updated });
+    updatePreferences({ accessibility: updated });
+  };
+
+  const toggleBudgetRange = (range: 'free' | 'low' | 'medium' | 'high') => {
+    const budgetRange = preferences.budgetRange || [];
+    const updated = budgetRange.includes(range)
+      ? budgetRange.filter(r => r !== range)
+      : [...budgetRange, range];
+    updatePreferences({ budgetRange: updated });
   };
 
   return (
@@ -55,7 +56,10 @@ export default function UserPreferences({ isOpen, onClose }: UserPreferencesProp
       <div className="preferences-modal">
         <div className="preferences-header">
           <h3>Your Event Preferences</h3>
-          <button className="close-btn" onClick={handleCancel}>×</button>
+          <div className="header-info">
+            <span className="auto-save-note">Changes saved automatically</span>
+            <button className="close-btn" onClick={handleClose}>×</button>
+          </div>
         </div>
         
         <div className="preferences-content">
@@ -66,9 +70,8 @@ export default function UserPreferences({ isOpen, onClose }: UserPreferencesProp
                 type="number"
                 min="1"
                 max="120"
-                value={localPrefs.age || ''}
-                onChange={(e) => setLocalPrefs({ 
-                  ...localPrefs, 
+                value={preferences.age || ''}
+                onChange={(e) => updatePreferences({ 
                   age: e.target.value ? parseInt(e.target.value) : undefined 
                 })}
                 placeholder="Your age"
@@ -81,8 +84,8 @@ export default function UserPreferences({ isOpen, onClose }: UserPreferencesProp
               Location:
               <input
                 type="text"
-                value={localPrefs.location || ''}
-                onChange={(e) => setLocalPrefs({ ...localPrefs, location: e.target.value })}
+                value={preferences.location || ''}
+                onChange={(e) => updatePreferences({ location: e.target.value })}
                 placeholder="City or area (e.g., Boston, Cambridge)"
               />
             </label>
@@ -95,9 +98,8 @@ export default function UserPreferences({ isOpen, onClose }: UserPreferencesProp
                 type="number"
                 min="1"
                 max="20"
-                value={localPrefs.familySize || ''}
-                onChange={(e) => setLocalPrefs({ 
-                  ...localPrefs, 
+                value={preferences.familySize || ''}
+                onChange={(e) => updatePreferences({ 
                   familySize: e.target.value ? parseInt(e.target.value) : undefined 
                 })}
                 placeholder="Number of people"
@@ -106,27 +108,43 @@ export default function UserPreferences({ isOpen, onClose }: UserPreferencesProp
           </div>
 
           <div className="preference-section">
-            <label>Budget Range:</label>
-            <select
-              value={localPrefs.budgetRange || 'medium'}
-              onChange={(e) => setLocalPrefs({ 
-                ...localPrefs, 
-                budgetRange: e.target.value as UserPreferencesType['budgetRange']
-              })}
-            >
-              <option value="free">Free events only</option>
-              <option value="low">Low cost ($1-25)</option>
-              <option value="medium">Medium cost ($25-75)</option>
-              <option value="high">Higher cost ($75+)</option>
-            </select>
+            <fieldset className="budget-fieldset">
+              <legend>Budget Range (select multiple)</legend>
+              <div className="budget-range-grid" role="group" aria-labelledby="budget-legend">
+                {[
+                  { value: 'free', label: 'Free events', description: '$0' },
+                  { value: 'low', label: 'Low cost', description: '$1-25' },
+                  { value: 'medium', label: 'Medium cost', description: '$25-75' },
+                  { value: 'high', label: 'Higher cost', description: '$75+' }
+                ].map(({ value, label, description }) => {
+                  const isSelected = (preferences.budgetRange || []).includes(value as any);
+                  return (
+                    <button
+                      key={value}
+                      type="button"
+                      role="checkbox"
+                      aria-checked={isSelected}
+                      aria-label={`${label}, ${description}${isSelected ? ', selected' : ', not selected'}`}
+                      className={`budget-tag ${isSelected ? 'selected' : ''}`}
+                      onClick={() => toggleBudgetRange(value as 'free' | 'low' | 'medium' | 'high')}
+                    >
+                      <div className="budget-label" aria-hidden="true">{label}</div>
+                      <div className="budget-description" aria-hidden="true">{description}</div>
+                      <span className="sr-only">
+                        {isSelected ? 'Selected' : 'Not selected'}
+                      </span>
+                    </button>
+                  );
+                })}
+              </div>
+            </fieldset>
           </div>
 
           <div className="preference-section">
             <label>Preferred Time:</label>
             <select
-              value={localPrefs.preferredTimes || 'any'}
-              onChange={(e) => setLocalPrefs({ 
-                ...localPrefs, 
+              value={preferences.preferredTimes || 'any'}
+              onChange={(e) => updatePreferences({ 
                 preferredTimes: e.target.value as UserPreferencesType['preferredTimes']
               })}
             >
@@ -140,9 +158,8 @@ export default function UserPreferences({ isOpen, onClose }: UserPreferencesProp
           <div className="preference-section">
             <label>Transportation:</label>
             <select
-              value={localPrefs.transportation || 'any'}
-              onChange={(e) => setLocalPrefs({ 
-                ...localPrefs, 
+              value={preferences.transportation || 'any'}
+              onChange={(e) => updatePreferences({ 
                 transportation: e.target.value as UserPreferencesType['transportation']
               })}
             >
@@ -154,51 +171,65 @@ export default function UserPreferences({ isOpen, onClose }: UserPreferencesProp
           </div>
 
           <div className="preference-section">
-            <label>Interests:</label>
-            <div className="interests-grid">
-              {COMMON_INTERESTS.map(interest => (
-                <button
-                  key={interest}
-                  type="button"
-                  className={`interest-tag ${(localPrefs.interests || []).includes(interest) ? 'selected' : ''}`}
-                  onClick={() => toggleInterest(interest)}
-                >
-                  {interest}
-                </button>
-              ))}
-            </div>
+            <fieldset className="interests-fieldset">
+              <legend>Interests (select multiple)</legend>
+              <div className="interests-grid" role="group">
+                {COMMON_INTERESTS.map(interest => {
+                  const isSelected = (preferences.interests || []).includes(interest);
+                  return (
+                    <button
+                      key={interest}
+                      type="button"
+                      role="checkbox"
+                      aria-checked={isSelected}
+                      className={`interest-tag ${isSelected ? 'selected' : ''}`}
+                      onClick={() => toggleInterest(interest)}
+                    >
+                      {interest}
+                      <span className="sr-only">
+                        {isSelected ? ', selected' : ', not selected'}
+                      </span>
+                    </button>
+                  );
+                })}
+              </div>
+            </fieldset>
           </div>
 
           <div className="preference-section">
-            <label>Accessibility Needs:</label>
-            <div className="accessibility-grid">
-              {ACCESSIBILITY_OPTIONS.map(option => (
-                <button
-                  key={option}
-                  type="button"
-                  className={`accessibility-tag ${(localPrefs.accessibility || []).includes(option) ? 'selected' : ''}`}
-                  onClick={() => toggleAccessibility(option)}
-                >
-                  {option}
-                </button>
-              ))}
-            </div>
+            <fieldset className="accessibility-fieldset">
+              <legend>Accessibility Needs (select multiple)</legend>
+              <div className="accessibility-grid" role="group">
+                {ACCESSIBILITY_OPTIONS.map(option => {
+                  const isSelected = (preferences.accessibility || []).includes(option);
+                  return (
+                    <button
+                      key={option}
+                      type="button"
+                      role="checkbox"
+                      aria-checked={isSelected}
+                      className={`accessibility-tag ${isSelected ? 'selected' : ''}`}
+                      onClick={() => toggleAccessibility(option)}
+                    >
+                      {option}
+                      <span className="sr-only">
+                        {isSelected ? ', selected' : ', not selected'}
+                      </span>
+                    </button>
+                  );
+                })}
+              </div>
+            </fieldset>
           </div>
         </div>
 
         <div className="preferences-footer">
-          <button className="reset-btn" onClick={() => {
-            resetPreferences();
-            setLocalPrefs({});
-          }}>
+          <button className="reset-btn" onClick={resetPreferences}>
             Reset to Defaults
           </button>
           <div className="action-buttons">
-            <button className="cancel-btn" onClick={handleCancel}>
-              Cancel
-            </button>
-            <button className="save-btn" onClick={handleSave}>
-              Save Preferences
+            <button className="close-btn-footer" onClick={handleClose}>
+              Close
             </button>
           </div>
         </div>
