@@ -21,10 +21,13 @@ export default function App() {
       <ThemeProvider>
         <AuthProvider>
           <div className="layout">
+            <a href="#main-content" className="skip-link">
+              Skip to main content
+            </a>
             <TopBar onToggleSidebar={() => setSidebarOpen((o) => !o)} />
             <div className="main">
               {sidebarOpen && <Sidebar />}
-              <div className="content">
+              <main className="content" id="main-content" tabIndex={-1} role="main">
                 <Routes>
                   <Route path="/" element={<Home />} />
                   <Route path="/login" element={<Login />} />
@@ -34,7 +37,7 @@ export default function App() {
                   <Route path="/reset-password" element={<ResetPassword />} />
                   <Route path="/calendar" element={<Calendar />} />
                 </Routes>
-              </div>
+              </main>
             </div>
           </div>
         </AuthProvider>

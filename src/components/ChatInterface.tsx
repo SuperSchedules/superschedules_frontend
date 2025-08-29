@@ -430,21 +430,23 @@ export default function ChatInterface({
   if (!isVisible) return null;
 
   return (
-    <div className="chat-interface">
+    <div className="chat-interface" aria-busy={isLoading}>
       <div className="chat-header">
         <h3>Event Assistant</h3>
         <div className="header-controls">
-          <button 
+          <button
             className="preferences-btn"
             onClick={() => setShowPreferences(true)}
             title="Set your event preferences"
+            aria-label="Set event preferences"
           >
             ⚙️ Preferences
           </button>
-          <button 
+          <button
             className="clear-chat-btn"
             onClick={clearChat}
             title="Clear conversation history"
+            aria-label="Clear conversation history"
           >
             🗑️ Clear Chat
           </button>
@@ -475,7 +477,14 @@ export default function ChatInterface({
         </div>
       </div>
       
-      <div className="chat-messages" ref={chatMessagesRef}>
+      <div
+        className="chat-messages"
+        ref={chatMessagesRef}
+        role="log"
+        aria-label="Chat messages"
+        aria-live="polite"
+        aria-relevant="additions"
+      >
         {messages.map((message) => {
           if (message.type === 'assistant') {
             return (
@@ -509,7 +518,7 @@ export default function ChatInterface({
         })}
         
         {isLoading && (
-          <div className="message assistant">
+          <div className="message assistant" role="status" aria-live="polite">
             <div className="message-content">
               <div className="typing-indicator">
                 <span></span>
@@ -526,6 +535,7 @@ export default function ChatInterface({
       
       <div className="chat-input">
         <textarea
+          aria-label="Message input"
           value={inputMessage}
           onChange={(e) => setInputMessage(e.target.value)}
           onKeyPress={handleKeyPress}
