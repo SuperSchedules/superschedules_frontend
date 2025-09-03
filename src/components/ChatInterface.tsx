@@ -287,21 +287,6 @@ export default function ChatInterface({
     setStreamingCleanup(() => cleanup);
   };
 
-
-  // Effect to handle suggested events after streaming is complete
-  useEffect(() => {
-    const latestMessage = messages[messages.length - 1];
-    if (latestMessage && latestMessage.type === 'assistant' && latestMessage.isComplete) {
-      const suggestedIds = latestMessage.suggestedEventIds || [];
-
-      console.log('Processing suggested events:', suggestedIds);
-
-      if (suggestedIds.length > 0) {
-        handleSuggestedEvents(suggestedIds);
-      }
-    }
-  }, [messages, handleSuggestedEvents]);
-
   const handleSuggestedEvents = useCallback(async (suggestedIds: (string | number)[]) => {
     console.log('handleSuggestedEvents called with:', suggestedIds);
     onSuggestionsLoading?.(true);
@@ -333,6 +318,20 @@ export default function ChatInterface({
       }
     }
   }, [chatService, onSuggestedEvents, onSuggestionsLoading]);
+
+  // Effect to handle suggested events after streaming is complete
+  useEffect(() => {
+    const latestMessage = messages[messages.length - 1];
+    if (latestMessage && latestMessage.type === 'assistant' && latestMessage.isComplete) {
+      const suggestedIds = latestMessage.suggestedEventIds || [];
+
+      console.log('Processing suggested events:', suggestedIds);
+
+      if (suggestedIds.length > 0) {
+        handleSuggestedEvents(suggestedIds);
+      }
+    }
+  }, [messages, handleSuggestedEvents]);
 
   const handleRegularMessage = async (message: string) => {
     try {

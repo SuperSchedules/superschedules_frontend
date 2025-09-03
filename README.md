@@ -8,8 +8,10 @@ Superschedules is an AI-assisted event discovery tool. The React frontend commun
 
 ## Local development
 
-1. Run `npm install`.
-2. Start the development server with `npm run dev` and visit http://localhost:5173.
+1. Run `pnpm install`.
+2. Start the development server with `pnpm dev` and visit http://localhost:5173.
+
+Note: This project uses pnpm as the package manager.
 
 ## API configuration
 
