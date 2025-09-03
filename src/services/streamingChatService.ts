@@ -20,16 +20,15 @@ export class FastAPIStreamingChatService implements StreamingChatService {
     this.baseURL = baseURL;
   }
 
-  startChatStream(
-    message: string,
-    onModelAToken: (token: string, done: boolean, metadata?: any) => void,
-    onModelBToken: (token: string, done: boolean, metadata?: any) => void,
-    onError: (error: string) => void,
-    context: any = {},
-    singleModelMode: boolean = true
-  ): () => void {
-    let eventSource: EventSource | null = null;
-    let isActive = true;
+    startChatStream(
+      message: string,
+      onModelAToken: (token: string, done: boolean, metadata?: any) => void,
+      onModelBToken: (token: string, done: boolean, metadata?: any) => void,
+      onError: (error: string) => void,
+      context: any = {},
+      singleModelMode: boolean = true
+    ): () => void {
+      let isActive = true;
 
     const startStream = async () => {
       try {
@@ -102,13 +101,10 @@ export class FastAPIStreamingChatService implements StreamingChatService {
     startStream();
 
     // Return cleanup function
-    return () => {
-      isActive = false;
-      if (eventSource) {
-        eventSource.close();
-      }
-    };
-  }
+      return () => {
+        isActive = false;
+      };
+    }
 
   private handleStreamChunk(
     chunk: any,
@@ -169,8 +165,8 @@ export class MockStreamingChatService implements StreamingChatService {
     onModelAToken: (token: string, done: boolean, metadata?: any) => void,
     onModelBToken: (token: string, done: boolean, metadata?: any) => void,
     onError: (error: string) => void,
-    context: any = {},
-    singleModelMode: boolean = true
+    _context: any = {},
+    _singleModelMode: boolean = true
   ): () => void {
     let isActive = true;
 
