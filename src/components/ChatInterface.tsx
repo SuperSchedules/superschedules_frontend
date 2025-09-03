@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useCallback } from 'react';
 import { format } from 'date-fns';
 import { useAuth } from '../auth';
 import { useUserPreferences } from '../hooks/useUserPreferences';
@@ -22,13 +22,6 @@ const formatMessageContent = (text: string): string => {
   formatted = formatted.replace(/\n/g, '\n');
   
   return formatted;
-};
-
-// Simple HTML to text converter for backward compatibility
-const htmlToText = (html: string): string => {
-  const tempDiv = document.createElement('div');
-  tempDiv.innerHTML = html;
-  return tempDiv.textContent || tempDiv.innerText || '';
 };
 
 const CHAT_STORAGE_KEY = 'superschedules_chat_messages';
@@ -96,7 +89,7 @@ export default function ChatInterface({
     // Try FastAPI first, fallback to mock for development
     try {
       return new FastAPIStreamingChatService(authFetch);
-    } catch (error) {
+    } catch (_error) {
       console.warn('FastAPI streaming service not available, using mock service');
       return new MockStreamingChatService();
     }
@@ -186,18 +179,16 @@ export default function ChatInterface({
     // Get the most recent messages (up to maxMessages)
     const messagesToInclude = recentMessages.slice(-maxMessages);
     
-    const formatMessage = (msg: any) => {
-      if (msg.type === 'user') {
-        return { role: 'user', content: msg.content };
-      } else if (msg.type === 'assistant') {
-        return { role: 'assistant', content: msg.content };
-      } else if (msg.type === 'assistant') {
-        return { role: 'assistant', content: msg.content };
-      }
-      return null;
-    };
+      const formatMessage = (msg: any) => {
+        if (msg.type === 'user') {
+          return { role: 'user', content: msg.content };
+        } else if (msg.type === 'assistant') {
+          return { role: 'assistant', content: msg.content };
+        }
+        return null;
+      };
 
-    const history = [];
+      const history: any[] = [];
     
     // Add welcome message context if it's not a default message
     if (welcomeMessage && messagesToInclude.length > 0) {
@@ -260,9 +251,9 @@ export default function ChatInterface({
         }
       },
       // Model B handler (unused in single mode)
-      (token: string, done: boolean, metadata?: any) => {
-        // Not used in single model mode
-      },
+        (_token: string, _done: boolean, _metadata?: any) => {
+          // Not used in single model mode
+        },
       // Error handler
       (error: string) => {
         console.error('Streaming error:', error);
@@ -302,34 +293,34 @@ export default function ChatInterface({
     const latestMessage = messages[messages.length - 1];
     if (latestMessage && latestMessage.type === 'assistant' && latestMessage.isComplete) {
       const suggestedIds = latestMessage.suggestedEventIds || [];
-      
+
       console.log('Processing suggested events:', suggestedIds);
-      
+
       if (suggestedIds.length > 0) {
         handleSuggestedEvents(suggestedIds);
       }
     }
-  }, [messages]);
+  }, [messages, handleSuggestedEvents]);
 
-  const handleSuggestedEvents = async (suggestedIds: (string | number)[]) => {
+  const handleSuggestedEvents = useCallback(async (suggestedIds: (string | number)[]) => {
     console.log('handleSuggestedEvents called with:', suggestedIds);
-    onSuggestionsLoading && onSuggestionsLoading(true);
-    
+    onSuggestionsLoading?.(true);
+
     try {
       const eventsResponse = await chatService.fetchEventsByIds(suggestedIds);
       console.log('Events response:', eventsResponse);
       if (eventsResponse.success && eventsResponse.data.length > 0) {
         console.log('Setting suggested events:', eventsResponse.data);
         onSuggestedEvents(eventsResponse.data);
-        onSuggestionsLoading && onSuggestionsLoading(false);
+        onSuggestionsLoading?.(false);
       } else if (import.meta.env.DEV) {
         console.log('Using mock events for:', suggestedIds);
         const mockEvents = chatService.generateMockEventsFromIds(suggestedIds);
         onSuggestedEvents(mockEvents);
-        onSuggestionsLoading && onSuggestionsLoading(false);
+        onSuggestionsLoading?.(false);
       } else {
         console.log('No events found, clearing loading');
-        onSuggestionsLoading && onSuggestionsLoading(false);
+        onSuggestionsLoading?.(false);
       }
     } catch (error) {
       console.error('Error fetching suggested events:', error);
@@ -338,10 +329,10 @@ export default function ChatInterface({
         const mockEvents = chatService.generateMockEventsFromIds(suggestedIds);
         onSuggestedEvents(mockEvents);
       } else {
-        onSuggestionsLoading && onSuggestionsLoading(false);
+        onSuggestionsLoading?.(false);
       }
     }
-  };
+  }, [chatService, onSuggestedEvents, onSuggestionsLoading]);
 
   const handleRegularMessage = async (message: string) => {
     try {
@@ -418,13 +409,6 @@ export default function ChatInterface({
       e.preventDefault();
       handleSendMessage();
     }
-  };
-
-  const formatTime = (timestamp: Date | string) => {
-    return new Date(timestamp).toLocaleTimeString([], { 
-      hour: '2-digit', 
-      minute: '2-digit' 
-    });
   };
 
   if (!isVisible) return null;
