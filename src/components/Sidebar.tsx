@@ -8,8 +8,8 @@ export default function Sidebar() {
           <NavLink className="nav-link sidebar-link" to="/">
             Scanner Control
           </NavLink>
-          <NavLink className="nav-link sidebar-link" to="/calendar">
-            Calendar
+          <NavLink className="nav-link sidebar-link" to="/chat">
+            Chat
           </NavLink>
           <NavLink className="nav-link sidebar-link" to="/about">
             About

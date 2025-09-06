@@ -1,4 +1,5 @@
 import { AuthFetch } from '../types/index';
+import { EVENTS_ENDPOINTS, STREAMING_API_BASE_URL } from '../constants/api';
 
 export interface StreamingChatService {
   startChatStream(
@@ -15,7 +16,7 @@ export class FastAPIStreamingChatService implements StreamingChatService {
   private authFetch: AuthFetch;
   private baseURL: string;
 
-  constructor(authFetch: AuthFetch, baseURL = 'http://localhost:8002') {
+  constructor(authFetch: AuthFetch, baseURL = STREAMING_API_BASE_URL) {
     this.authFetch = authFetch;
     this.baseURL = baseURL;
   }
@@ -30,11 +31,14 @@ export class FastAPIStreamingChatService implements StreamingChatService {
     ): () => void {
       let isActive = true;
 
+    const controller = new AbortController();
     const startStream = async () => {
       try {
         // Get the auth token
         const token = await this.getAuthToken();
-        console.log('Starting chat stream with token:', token ? 'Token present' : 'No token');
+        if (import.meta.env.DEV) {
+          console.log('Starting chat stream with token:', token ? 'Token present' : 'No token');
+        }
         
         // Use fetch with streaming (Server-Sent Events)
         const response = await fetch(`${this.baseURL}/chat/stream`, {
@@ -44,6 +48,7 @@ export class FastAPIStreamingChatService implements StreamingChatService {
             'Authorization': `Bearer ${token}`,
             'Accept': 'text/event-stream',
           },
+          signal: controller.signal,
           body: JSON.stringify({
             message,
             context,
@@ -59,7 +64,9 @@ export class FastAPIStreamingChatService implements StreamingChatService {
           throw new Error(`HTTP ${response.status}: ${response.statusText}. ${errorText}`);
         }
         
-        console.log('Chat stream response received, status:', response.status);
+        if (import.meta.env.DEV) {
+          console.log('Chat stream response received, status:', response.status);
+        }
 
         if (!response.body) {
           throw new Error('No response body for streaming');
@@ -68,26 +75,47 @@ export class FastAPIStreamingChatService implements StreamingChatService {
         const reader = response.body.getReader();
         const decoder = new TextDecoder();
         let buffer = '';
+        let eventBuffer: string[] = [];
 
         while (isActive) {
           const { done, value } = await reader.read();
           
-          if (done) break;
-          
-          buffer += decoder.decode(value, { stream: true });
-          
-          // Process complete messages
-          const lines = buffer.split('\n');
-          buffer = lines.pop() || ''; // Keep incomplete line in buffer
-          
-          for (const line of lines) {
-            if (line.startsWith('data: ')) {
+          if (done) {
+            // Flush any pending event data before exiting
+            if (eventBuffer.length) {
+              const payload = eventBuffer.join('\n');
+              eventBuffer = [];
               try {
-                const data = JSON.parse(line.slice(6));
+                const data = JSON.parse(payload);
                 this.handleStreamChunk(data, onModelAToken, onModelBToken, onError);
               } catch (e) {
-                console.error('Error parsing stream data:', e);
+                if (import.meta.env.DEV) console.error('Error parsing final stream data:', e);
               }
+            }
+            break;
+          }
+          
+          buffer += decoder.decode(value, { stream: true });
+          // SSE parsing: events are separated by blank lines; join multiple data: lines
+          const lines = buffer.split('\n');
+          buffer = lines.pop() || '';
+          for (const raw of lines) {
+            const line = raw.trimEnd();
+            if (line === '') {
+              if (eventBuffer.length) {
+                const payload = eventBuffer.join('\n');
+                eventBuffer = [];
+                try {
+                  const data = JSON.parse(payload);
+                  this.handleStreamChunk(data, onModelAToken, onModelBToken, onError);
+                } catch (e) {
+                  if (import.meta.env.DEV) console.error('Error parsing stream data:', e);
+                }
+              }
+              continue;
+            }
+            if (line.startsWith('data:')) {
+              eventBuffer.push(line.slice(5).trimStart());
             }
           }
         }
@@ -103,6 +131,7 @@ export class FastAPIStreamingChatService implements StreamingChatService {
     // Return cleanup function
       return () => {
         isActive = false;
+        try { controller.abort(); } catch {}
       };
     }
 
@@ -129,7 +158,7 @@ export class FastAPIStreamingChatService implements StreamingChatService {
       onModelBToken(chunk.token || '', chunk.done, metadata);
     } else if (chunk.model === 'SYSTEM' && chunk.done) {
       // Stream completed
-      console.log('Stream completed');
+      if (import.meta.env.DEV) console.log('Stream completed');
     }
   }
 
@@ -138,7 +167,7 @@ export class FastAPIStreamingChatService implements StreamingChatService {
     try {
       // Make a simple request that will trigger token refresh if needed
       // The authFetch interceptor handles expiration automatically
-      await this.authFetch.get('/api/v1/events/', { 
+      await this.authFetch.get(EVENTS_ENDPOINTS.list, { 
         params: { limit: 1 },
         timeout: 5000 
       });
@@ -149,10 +178,10 @@ export class FastAPIStreamingChatService implements StreamingChatService {
         throw new Error('No authentication token available after refresh');
       }
       
-      console.log('Retrieved fresh token for streaming');
+      if (import.meta.env.DEV) console.log('Retrieved fresh token for streaming');
       return token;
     } catch (error) {
-      console.error('Failed to get/refresh token for streaming:', error);
+      if (import.meta.env.DEV) console.error('Failed to get/refresh token for streaming:', error);
       throw new Error('Authentication failed - please refresh the page and try again');
     }
   }

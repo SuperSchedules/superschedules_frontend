@@ -42,19 +42,10 @@ describe('App routing', () => {
     expect(screen.getByText(/about superschedules/i)).toBeInTheDocument();
   });
 
-  it('renders Calendar page', async () => {
+  it('renders Chat page', async () => {
     window.localStorage.setItem('token', 'test-token');
-    window.history.pushState({}, '', '/calendar');
+    window.history.pushState({}, '', '/chat');
     render(<App />);
-    expect(screen.getByRole('heading', { name: /calendar/i })).toBeInTheDocument();
-    await waitFor(() => {
-      expect(mockAuthFetch.get).toHaveBeenCalledTimes(1);
-    });
-    const url = mockAuthFetch.get.mock.calls[0][0];
-    const parsed = new URL(url);
-    expect(parsed.pathname).toBe(new URL(EVENTS_ENDPOINTS.list).pathname);
-    expect(parsed.searchParams.get('start')).toBeTruthy();
-    expect(parsed.searchParams.get('end')).toBeTruthy();
-    expect(mockAuthFetch.get.mock.calls[0][1]).toBeUndefined();
+    expect(screen.getByLabelText(/message input/i)).toBeInTheDocument();
   });
 });

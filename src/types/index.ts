@@ -27,12 +27,8 @@ export interface AuthContext {
   authFetch: AuthFetch;
 }
 
-export interface AuthFetch {
-  get: (url: string) => Promise<{ data: any }>;
-  post: (url: string, data?: any) => Promise<{ data: any }>;
-  put: (url: string, data?: any) => Promise<{ data: any }>;
-  delete: (url: string) => Promise<{ data: any }>;
-}
+// Use Axios instance shape for authenticated HTTP client
+export type AuthFetch = import('axios').AxiosInstance;
 
 // Event types
 export interface Event {
@@ -83,6 +79,11 @@ export interface ChatMessage {
   modelA?: ModelResponse;
   modelB?: ModelResponse;
   selectedModel?: 'A' | 'B' | null;
+  // Streaming fields (optional)
+  isComplete?: boolean;
+  suggestedEventIds?: (string | number)[];
+  followUpQuestions?: string[];
+  responseTimeMs?: number;
 }
 
 export interface ChatContext {

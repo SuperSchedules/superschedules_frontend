@@ -35,7 +35,7 @@ export default function App() {
                   <Route path="/create-user" element={<CreateUser />} />
                   <Route path="/verify-account" element={<VerifyAccount />} />
                   <Route path="/reset-password" element={<ResetPassword />} />
-                  <Route path="/calendar" element={<Calendar />} />
+                  <Route path="/chat" element={<Calendar />} />
                 </Routes>
               </main>
             </div>

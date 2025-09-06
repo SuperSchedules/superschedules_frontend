@@ -8,7 +8,6 @@ export default function CalendarPage() {
 
   return (
     <div className="calendar-page-new">
-      <h1>Calendar</h1>
       {/* Chat Section at Top */}
       <div className="chat-section-separate">
         <ChatInterface

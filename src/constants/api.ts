@@ -1,5 +1,5 @@
-const DEV_API_BASE_URL = 'http://localhost:8000';
-const PROD_API_BASE_URL = 'https://api.example.com';
+const DEV_API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000';
+const PROD_API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://api.example.com';
 
 export const API_BASE_URL = import.meta.env.PROD
   ? PROD_API_BASE_URL
@@ -28,4 +28,8 @@ export const SOURCES_ENDPOINTS = {
 
 export const CHAT_ENDPOINTS = {
   message: `${API_ROOT}/chat/`,
+  suggestions: `${API_ROOT}/chat/suggestions/`,
 };
+
+// Optional separate base for streaming (e.g., FastAPI microservice)
+export const STREAMING_API_BASE_URL = import.meta.env.VITE_STREAMING_API_BASE_URL || 'http://localhost:8002';

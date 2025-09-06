@@ -55,7 +55,7 @@ describe('CreateUser page', () => {
     fireEvent.change(screen.getByLabelText(/zip code/i), {
       target: { value: '12345' },
     });
-    fireEvent.click(screen.getByText(/create account/i));
+    fireEvent.click(screen.getByRole('button', { name: /create account/i }));
 
     await waitFor(() => {
       expect(screen.getByText(/verify/i)).toBeInTheDocument();

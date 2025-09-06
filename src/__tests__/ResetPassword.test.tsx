@@ -31,7 +31,7 @@ describe('ResetPassword page', () => {
     fireEvent.change(screen.getByLabelText(/confirm password/i), {
       target: { value: 'abc' },
     });
-    fireEvent.click(screen.getByText(/reset password/i));
+    fireEvent.click(screen.getByRole('button', { name: /reset password/i }));
 
     await waitFor(() => {
       expect(globalThis.fetch).toHaveBeenCalledWith(

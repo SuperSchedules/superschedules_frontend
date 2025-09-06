@@ -1,5 +1,4 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
-import { format } from 'date-fns';
 import { useAuth } from '../auth';
 import { useUserPreferences } from '../hooks/useUserPreferences';
 import { ChatService } from '../services/chatService';
@@ -8,21 +7,12 @@ import UserPreferences from './UserPreferences';
 import type { ChatInterfaceProps, ChatMessage, Event } from '../types/index';
 import './ChatInterface.css';
 import './UserPreferences.css';
+import DateRangePicker from './DateRangePicker';
+import ChatComposer from './ChatComposer';
+import MessagesList from './MessagesList';
+import SuggestedEventsList from './SuggestedEventsList';
 
-// Enhanced text formatter that preserves line breaks and formatting
-const formatMessageContent = (text: string): string => {
-  if (!text) return '';
-  
-  // First decode HTML entities and strip most HTML tags but preserve structure
-  const tempDiv = document.createElement('div');
-  tempDiv.innerHTML = text;
-  let formatted = tempDiv.textContent || tempDiv.innerText || '';
-  
-  // Preserve line breaks and bullet point formatting
-  formatted = formatted.replace(/\n/g, '\n');
-  
-  return formatted;
-};
+// Message formatting moved into MessageItem
 
 const CHAT_STORAGE_KEY = 'superschedules_chat_messages';
 const SESSION_STORAGE_KEY = 'superschedules_session_id';
@@ -81,7 +71,8 @@ export default function ChatInterface({
     nextWeek.setDate(nextWeek.getDate() + 7);
     return nextWeek.toISOString().split('T')[0];
   });
-  const messagesEndRef = useRef<HTMLDivElement>(null);
+  // Date helpers are handled within DateRangePicker
+  // MessagesList will handle scroll management
   const { authFetch } = useAuth();
   const { preferences, getPreferencesContext } = useUserPreferences();
   const [chatService] = useState(() => new ChatService(authFetch));
@@ -95,13 +86,7 @@ export default function ChatInterface({
     }
   });
 
-  const chatMessagesRef = useRef<HTMLDivElement>(null);
-  
-  const scrollToBottom = () => {
-    if (chatMessagesRef.current) {
-      chatMessagesRef.current.scrollTop = chatMessagesRef.current.scrollHeight;
-    }
-  };
+  // Legacy scroll helpers removed; managed by MessagesList
 
   // Persist messages to localStorage whenever they change
   useEffect(() => {
@@ -130,9 +115,7 @@ export default function ChatInterface({
     console.log('Chat cleared');
   };
 
-  useEffect(() => {
-    scrollToBottom();
-  }, [messages]);
+  // MessagesList auto-scrolls on updates
 
   // Cleanup streaming connections on unmount
   useEffect(() => {
@@ -257,14 +240,9 @@ export default function ChatInterface({
       // Error handler
       (error: string) => {
         console.error('Streaming error:', error);
-        const errorMessage = {
-          id: Date.now() + 2000,
-          type: 'assistant',
-          content: `Sorry, I encountered an error with streaming: ${error}. Please try again.`,
-          timestamp: new Date()
-        };
-        setMessages(prev => [...prev, errorMessage]);
+        // Fallback to non-streaming message on error
         setIsLoading(false);
+        handleRegularMessage(message);
       },
       // Context
       {
@@ -436,202 +414,26 @@ export default function ChatInterface({
         </div>
       </div>
       
-      {/* Date Range Selector */}
-      <div className="date-range-selector">
-        <div className="date-range-inputs">
-          <div className="date-input-group">
-            <label htmlFor="date-from">From:</label>
-            <input
-              id="date-from"
-              type="date"
-              value={dateFrom}
-              onChange={(e) => setDateFrom(e.target.value)}
-            />
-          </div>
-          <div className="date-input-group">
-            <label htmlFor="date-to">To:</label>
-            <input
-              id="date-to"
-              type="date"
-              value={dateTo}
-              onChange={(e) => setDateTo(e.target.value)}
-            />
-          </div>
-        </div>
-      </div>
+      <DateRangePicker
+        from={dateFrom}
+        to={dateTo}
+        onChange={({ from, to }) => {
+          setDateFrom(from);
+          setDateTo(to);
+        }}
+      />
       
-      <div
-        className="chat-messages"
-        ref={chatMessagesRef}
-        role="log"
-        aria-label="Chat messages"
-        aria-live="polite"
-        aria-relevant="additions"
-      >
-        {messages.map((message) => {
-          if (message.type === 'assistant') {
-            return (
-              <div key={message.id} className="message assistant">
-                <div className="message-content formatted-content">
-                  {useStreaming ? (
-                    <pre className="formatted-text">
-                      {formatMessageContent(message.content || '')}
-                      {!message.isComplete && <span className="typing-cursor">|</span>}
-                    </pre>
-                  ) : (
-                    <pre className="formatted-text">{formatMessageContent(message.content || '')}</pre>
-                  )}
-                </div>
-              </div>
-            );
-          }
-          
-          return (
-            <div 
-              key={message.id} 
-              className={`message ${message.type}`}
-            >
-              <div className="message-content">
-                <pre className="formatted-text">
-                  {formatMessageContent(message.content || '')}
-                </pre>
-              </div>
-            </div>
-          );
-        })}
-        
-        {isLoading && (
-          <div className="message assistant" role="status" aria-live="polite">
-            <div className="message-content">
-              <div className="typing-indicator">
-                <span></span>
-                <span></span>
-                <span></span>
-              </div>
-              <div className="loading-models">Thinking...</div>
-            </div>
-          </div>
-        )}
-        <div ref={messagesEndRef} />
-      </div>
+      <MessagesList messages={messages} streaming={useStreaming} isLoading={isLoading} />
 
       
-      <div className="chat-input">
-        <textarea
-          aria-label="Message input"
-          value={inputMessage}
-          onChange={(e) => setInputMessage(e.target.value)}
-          onKeyPress={handleKeyPress}
-          placeholder="Ask me about events..."
-          disabled={isLoading}
-          rows="2"
-        />
-        <button 
-          onClick={handleSendMessage}
-          disabled={!inputMessage.trim() || isLoading}
-          className="send-button"
-        >
-          Send
-        </button>
-      </div>
+      <ChatComposer
+        value={inputMessage}
+        onChange={setInputMessage}
+        onSend={handleSendMessage}
+        disabled={isLoading}
+      />
 
-      {/* Suggested Events Section Below Chat */}
-      {(suggestedEvents.length > 0 || loadingSuggestions) && (
-        <div className="suggested-events-section">
-          <h3>Suggested Events</h3>
-          {loadingSuggestions ? (
-            <div className="loading-suggestions">
-              <div className="loading-spinner"></div>
-              <span>Finding relevant events...</span>
-            </div>
-          ) : (
-            <div className="suggested-events-list">
-              {suggestedEvents.map((event) => (
-                <div key={event.id} className="suggested-event-card-full">
-                  {/* Top line: Title and Location */}
-                  <div className="event-header">
-                    <h4 className="event-title">{event.title}</h4>
-                    {event.location && (
-                      <div className="event-location">
-                        <i className="bi bi-geo-alt-fill"></i>
-                        <span>{event.location}</span>
-                        <a 
-                          href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(event.location)}`}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="directions-link"
-                        >
-                          Directions
-                        </a>
-                      </div>
-                    )}
-                  </div>
-
-                  {/* Description */}
-                  {event.description && (
-                    <div className="event-description">
-                      {event.description}
-                    </div>
-                  )}
-
-                  {/* Meta tags at the bottom */}
-                  <div className="event-meta">
-                    {event.start_time && (
-                      <span className="meta-tag meta-time">
-                        {format(new Date(event.start_time), 'EEEE MMM d, yyyy • h:mm a')}
-                      </span>
-                    )}
-                    {event.age_range && (
-                      <span className="meta-tag meta-age">
-                        <i className="bi bi-people-fill"></i>
-                        Ages {event.age_range}
-                      </span>
-                    )}
-                    {event.price && (
-                      <span className="meta-tag meta-price">
-                        <i className="bi bi-currency-dollar"></i>
-                        {event.price}
-                      </span>
-                    )}
-                    {event.organizer && (
-                      <span className="meta-tag meta-organizer">
-                        <i className="bi bi-building"></i>
-                        {event.organizer}
-                      </span>
-                    )}
-                    {/* Display tags from either tags or metadata_tags field */}
-                    {(event.tags || event.metadata_tags) && (
-                      <>
-                        {(event.tags || event.metadata_tags || []).slice(0, 3).map((tag, index) => (
-                          <span key={index} className="meta-tag meta-category">
-                            <i className="bi bi-tag-fill"></i>
-                            {tag}
-                          </span>
-                        ))}
-                      </>
-                    )}
-                  </div>
-
-                  {/* View Details button */}
-                  {event.url && (
-                    <div className="event-actions">
-                      <a 
-                        href={event.url} 
-                        target="_blank" 
-                        rel="noopener noreferrer"
-                        className="view-event-btn"
-                      >
-                        <i className="bi bi-box-arrow-up-right"></i>
-                        View Details
-                      </a>
-                    </div>
-                  )}
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
-      )}
+      <SuggestedEventsList events={suggestedEvents} loading={loadingSuggestions} />
       
       <UserPreferences 
         isOpen={showPreferences} 
