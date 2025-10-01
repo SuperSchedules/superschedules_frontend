@@ -1,5 +1,6 @@
 const DEV_API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000';
-const PROD_API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://api.example.com';
+// In production, use relative URLs so the frontend calls the same host (ALB)
+const PROD_API_BASE_URL = import.meta.env.VITE_API_BASE_URL || '';
 
 export const API_BASE_URL = import.meta.env.PROD
   ? PROD_API_BASE_URL
@@ -31,5 +32,6 @@ export const CHAT_ENDPOINTS = {
   suggestions: `${API_ROOT}/chat/suggestions/`,
 };
 
-// Optional separate base for streaming (e.g., FastAPI microservice)
-export const STREAMING_API_BASE_URL = import.meta.env.VITE_STREAMING_API_BASE_URL || 'http://localhost:8002';
+// Streaming uses same backend in production (Django serves both), separate in dev
+export const STREAMING_API_BASE_URL = import.meta.env.VITE_STREAMING_API_BASE_URL
+  || (import.meta.env.PROD ? '' : 'http://localhost:8002');
