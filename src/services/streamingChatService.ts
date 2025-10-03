@@ -131,7 +131,11 @@ export class FastAPIStreamingChatService implements StreamingChatService {
     // Return cleanup function
       return () => {
         isActive = false;
-        try { controller.abort(); } catch {}
+        try {
+          controller.abort();
+        } catch (_error) {
+          // Ignore abort errors during cleanup
+        }
       };
     }
 

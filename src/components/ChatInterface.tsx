@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '../auth';
 import { useUserPreferences } from '../hooks/useUserPreferences';
 import { ChatService } from '../services/chatService';
@@ -380,13 +380,6 @@ export default function ChatInterface({
     }
   };
 
-
-  const handleKeyPress = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
-    if (e.key === 'Enter' && !e.shiftKey) {
-      e.preventDefault();
-      handleSendMessage();
-    }
-  };
 
   if (!isVisible) return null;
 

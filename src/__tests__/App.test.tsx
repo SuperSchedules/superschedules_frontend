@@ -25,8 +25,7 @@ vi.mock('../auth', () => {
   return { AuthProvider, AuthContext, useAuth, mockAuthFetch };
 });
 
-import { mockAuthFetch } from '../auth';
-import { render, screen, cleanup, waitFor } from '@testing-library/react';
+import { render, screen, cleanup } from '@testing-library/react';
 import App from '../App';
 import { EVENTS_ENDPOINTS } from '../constants/api';
 

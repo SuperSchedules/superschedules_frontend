@@ -27,7 +27,7 @@ export default function DateRangePicker({ from, to, onChange }: DateRangePickerP
               let v = from;
               if (!isCompleteDate(v)) v = todayStr;
               v = clampToToday(v);
-              let newFrom = v;
+              const newFrom = v;
               let newTo = to;
               if (newTo && newFrom && newFrom > newTo) newTo = newFrom;
               if (newFrom !== from || newTo !== to) onChange({ from: newFrom, to: newTo });
@@ -47,7 +47,7 @@ export default function DateRangePicker({ from, to, onChange }: DateRangePickerP
               let v = to;
               if (!isCompleteDate(v)) v = todayStr;
               v = clampToToday(v);
-              let newTo = v;
+              const newTo = v;
               let newFrom = from;
               if (newTo && newFrom && newTo < newFrom) newFrom = newTo;
               if (newFrom !== from || newTo !== to) onChange({ from: newFrom, to: newTo });
