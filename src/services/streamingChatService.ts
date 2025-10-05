@@ -41,7 +41,7 @@ export class FastAPIStreamingChatService implements StreamingChatService {
         }
         
         // Use fetch with streaming (Server-Sent Events)
-        const response = await fetch(`${this.baseURL}/chat/stream`, {
+        const response = await fetch(`${this.baseURL}/api/v1/chat/stream`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',

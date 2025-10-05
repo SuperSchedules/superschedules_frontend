@@ -32,6 +32,6 @@ export const CHAT_ENDPOINTS = {
   suggestions: `${API_ROOT}/chat/suggestions/`,
 };
 
-// Streaming uses same backend in production (Django serves both), separate in dev
+// Streaming now uses /api/v1/chat/stream (same as other endpoints)
 export const STREAMING_API_BASE_URL = import.meta.env.VITE_STREAMING_API_BASE_URL
-  || (import.meta.env.PROD ? '' : 'http://localhost:8002');
+  || (import.meta.env.PROD ? API_BASE_URL : 'http://localhost:8002');
