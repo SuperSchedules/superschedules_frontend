@@ -1,6 +1,6 @@
 const DEV_API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000';
-// In production, use relative URLs so the frontend calls the same host (ALB)
-const PROD_API_BASE_URL = import.meta.env.VITE_API_BASE_URL || '';
+// In production, default to hosted API (can be overridden via env)
+const PROD_API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://api.eventzombie.com';
 
 export const API_BASE_URL = import.meta.env.PROD
   ? PROD_API_BASE_URL
