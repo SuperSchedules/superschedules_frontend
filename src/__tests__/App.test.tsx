@@ -27,7 +27,6 @@ vi.mock('../auth', () => {
 
 import { render, screen, cleanup } from '@testing-library/react';
 import App from '../App';
-import { EVENTS_ENDPOINTS } from '../constants/api';
 
 describe('App routing', () => {
   afterEach(() => {
@@ -35,16 +34,15 @@ describe('App routing', () => {
     cleanup();
   });
 
-  it('renders About page', () => {
-    window.history.pushState({}, '', '/about');
+  it('renders Home chat experience on root', async () => {
+    window.history.pushState({}, '', '/');
     render(<App />);
-    expect(screen.getByText(/about superschedules/i)).toBeInTheDocument();
+    expect(await screen.findByLabelText(/message input/i)).toBeInTheDocument();
   });
 
-  it('renders Chat page', async () => {
-    window.localStorage.setItem('token', 'test-token');
-    window.history.pushState({}, '', '/chat');
+  it('renders Login page route', () => {
+    window.history.pushState({}, '', '/login');
     render(<App />);
-    expect(screen.getByLabelText(/message input/i)).toBeInTheDocument();
+    expect(screen.getByText(/sign in/i)).toBeInTheDocument();
   });
 });

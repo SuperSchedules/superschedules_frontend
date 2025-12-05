@@ -4,11 +4,11 @@ import { describe, it, expect, vi } from 'vitest';
 import Home from '../pages/Home';
 import { AuthContext } from '../auth';
 
-function renderWithAuth(ui, { sources = [] } = {}) {
+function renderWithAuth(ui) {
   const value = {
     user: { token: 'abc' },
     authFetch: {
-      get: vi.fn().mockResolvedValue({ data: sources }),
+      get: vi.fn(),
       post: vi.fn(),
     },
   };
@@ -20,20 +20,9 @@ function renderWithAuth(ui, { sources = [] } = {}) {
 }
 
 describe('Home', () => {
-  it('shows new source fields', async () => {
-    const sources = [
-      {
-        id: 1,
-        base_url: 'https://example.com',
-        date_added: '2024-01-01',
-        last_run_at: '2024-01-02',
-        status: 'not run',
-      },
-    ];
-    renderWithAuth(<Home />, { sources });
-    await screen.findByText('Submitted Sites');
-    expect(screen.getByText('Date Added')).toBeInTheDocument();
-    expect(screen.getByText('Last Run')).toBeInTheDocument();
-    expect(screen.getByText(/not run/i)).toBeInTheDocument();
+  it('shows the chat interface for authenticated users', async () => {
+    renderWithAuth(<Home />);
+    expect(await screen.findByLabelText(/message input/i)).toBeInTheDocument();
+    expect(screen.getByText(/preferences/i)).toBeInTheDocument();
   });
 });
