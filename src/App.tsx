@@ -1,21 +1,15 @@
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
-import { useState } from 'react';
 import { AuthProvider } from './auth';
 import { ThemeProvider } from './contexts/ThemeContext';
-import TopBar from './components/TopBar';
-import Sidebar from './components/Sidebar';
+import AppSidebar from './components/AppSidebar';
 import Home from './pages/Home';
 import Login from './pages/Login';
-import About from './pages/About';
 import CreateUser from './pages/CreateUser';
 import VerifyAccount from './pages/VerifyAccount';
-import Calendar from './pages/Calendar';
 import ResetPassword from './pages/ResetPassword';
 import './App.css';
 
 export default function App() {
-  const [sidebarOpen, setSidebarOpen] = useState(true);
-
   return (
     <BrowserRouter>
       <ThemeProvider>
@@ -24,21 +18,16 @@ export default function App() {
             <a href="#main-content" className="skip-link">
               Skip to main content
             </a>
-            <TopBar onToggleSidebar={() => setSidebarOpen((o) => !o)} />
-            <div className="main">
-              {sidebarOpen && <Sidebar />}
-              <main className="content" id="main-content" tabIndex={-1} role="main">
-                <Routes>
-                  <Route path="/" element={<Home />} />
-                  <Route path="/login" element={<Login />} />
-                  <Route path="/about" element={<About />} />
-                  <Route path="/create-user" element={<CreateUser />} />
-                  <Route path="/verify-account" element={<VerifyAccount />} />
-                  <Route path="/reset-password" element={<ResetPassword />} />
-                  <Route path="/chat" element={<Calendar />} />
-                </Routes>
-              </main>
-            </div>
+            <AppSidebar />
+            <main className="content" id="main-content" tabIndex={-1} role="main">
+              <Routes>
+                <Route path="/" element={<Home />} />
+                <Route path="/login" element={<Login />} />
+                <Route path="/create-user" element={<CreateUser />} />
+                <Route path="/verify-account" element={<VerifyAccount />} />
+                <Route path="/reset-password" element={<ResetPassword />} />
+              </Routes>
+            </main>
           </div>
         </AuthProvider>
       </ThemeProvider>

@@ -88,11 +88,25 @@ export function AuthProvider({ children }: AuthProviderProps) {
   const logoutTimerRef = useRef<NodeJS.Timeout | null>(null);
 
   const logout = useCallback(() => {
+    // Clear auth tokens
     localStorage.removeItem('token');
     localStorage.removeItem('refresh');
     localStorage.removeItem('loginTime');
+
+    // Clear user-specific chats
+    if (user) {
+      const userId = (user as any).id;
+      if (userId) {
+        const chatKey = `superschedules_chats_user${userId}`;
+        const sessionKey = `superschedules_session_user${userId}`;
+        localStorage.removeItem(chatKey);
+        localStorage.removeItem(sessionKey);
+        console.log('Cleared user-specific chats on logout');
+      }
+    }
+
     setUser(null);
-  }, []);
+  }, [user]);
 
   useEffect(() => {
     if (!user) {

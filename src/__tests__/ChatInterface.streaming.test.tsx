@@ -75,7 +75,7 @@ describe('ChatInterface streaming fallback', () => {
       </AuthContext.Provider>
     );
 
-  it('falls back to non-streaming when streaming errors', async () => {
+  it('shows error message when streaming fails', async () => {
     renderWithAuth(
       <ChatInterface onSuggestedEvents={() => {}} />
     );
@@ -85,7 +85,7 @@ describe('ChatInterface streaming fallback', () => {
     fireEvent.keyDown(input, { key: 'Enter' });
 
     await waitFor(() => {
-      expect(screen.getAllByText(/Fallback response/i).length).toBeGreaterThan(0);
+      expect(screen.getByText(/having trouble connecting to the chat service/i)).toBeInTheDocument();
     });
   });
 });

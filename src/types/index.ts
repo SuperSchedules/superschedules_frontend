@@ -30,12 +30,26 @@ export interface AuthContext {
 // Use Axios instance shape for authenticated HTTP client
 export type AuthFetch = import('axios').AxiosInstance;
 
+// Place types (Schema.org Place from Django)
+export interface Place {
+  id?: number;
+  name?: string;
+  address?: string;
+  telephone?: string;
+  url?: string;
+  latitude?: number;
+  longitude?: number;
+  created_at?: string;
+  updated_at?: string;
+}
+
 // Event types
 export interface Event {
   id: string;
   title: string;
   description?: string;
   location?: string;
+  place?: Place;
   start: Date | string;
   end?: Date | string;
   start_time?: string;
@@ -47,6 +61,14 @@ export interface Event {
   age_range?: string;
   price?: string;
   organizer?: string;
+  event_status?: string; // scheduled/cancelled/postponed
+  event_attendance_mode?: string; // offline/online/mixed
+  external_id?: string;
+  source?: number;
+  affiliate_link?: string;
+  revenue_source?: string;
+  created_at?: string;
+  updated_at?: string;
 }
 
 // Chat/LLM types
@@ -96,6 +118,7 @@ export interface ChatContext {
     from: string;
     to: string;
   };
+  more_like_event_id?: string | number;
 }
 
 export interface ChatRequestPayload {
@@ -149,6 +172,8 @@ export interface AnalyticsSummary {
 export interface ChatInterfaceProps {
   onSuggestedEvents: (events: Event[]) => void;
   onSuggestionsLoading?: (loading: boolean) => void;
+  onFindMoreLike?: (event: Event) => void;
+  onClearEvents?: () => void;
   suggestedEvents?: Event[];
   loadingSuggestions?: boolean;
   isVisible?: boolean;

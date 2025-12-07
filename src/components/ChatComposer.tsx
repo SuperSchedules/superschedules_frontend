@@ -8,7 +8,7 @@ interface ChatComposerProps {
   placeholder?: string;
 }
 
-export default function ChatComposer({ value, onChange, onSend, disabled = false, placeholder = 'Ask me about events...' }: ChatComposerProps) {
+export default function ChatComposer({ value, onChange, onSend, disabled = false, placeholder = "What events are you craving? 🧟" }: ChatComposerProps) {
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();

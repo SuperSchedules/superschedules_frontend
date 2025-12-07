@@ -8,46 +8,60 @@
   -moz-osx-font-smoothing: grayscale;
 }
 
-/* Light theme variables */
+/* Light theme variables - Zombie Cute */
 :root[data-theme="light"] {
-  --bg-color: #fff4e6;
-  --text-color: #2c1810;
-  --topbar-bg-color: #d2b48c;
-  --sidebar-bg-color: #f5deb3;
+  --bg-color: #f0f4f0;
+  --text-color: #1a1a1a;
+  --sidebar-bg-color: #2d3748;
+  --sidebar-text-color: #e0e0e0;
   --content-bg-color: #ffffff;
-  --border-color: #c2a878;
-  --hover-bg-color: rgba(139, 69, 19, 0.1);
-  --hover-border-color: #a0926b;
-  --focus-ring-color: #b35c00;
-  --link-color: #b35c00;
-  --link-hover-color: #994100;
-  --primary-color: #b35c00;
-  --menu-bg-color: #f5f5f5;
-  --menu-border-color: #dee2e6;
+  --border-color: #d4e4d4;
+  --hover-bg-color: rgba(124, 252, 0, 0.1);
+  --hover-border-color: #7cfc00;
+  --focus-ring-color: #7cfc00;
+  --link-color: #6b46c1;
+  --link-hover-color: #553c9a;
+  --primary-color: #7cfc00;
+  --secondary-color: #9b59b6;
+  --accent-color: #ff69b4;
+  --zombie-green: #7cfc00;
+  --zombie-purple: #9b59b6;
+  --zombie-pink: #ff69b4;
+  --menu-bg-color: #f8f8f8;
+  --menu-border-color: #d4e4d4;
   --card-bg-color: #ffffff;
-  --card-border-color: #dee2e6;
-  --bs-border-color: #dee2e6;
+  --card-border-color: #d4e4d4;
+  --bs-border-color: #d4e4d4;
+  --message-user-bg: #9b59b6;
+  --message-assistant-bg: #e8f5e9;
 }
 
-/* Dark theme variables */
+/* Dark theme variables - Zombie Cute */
 :root[data-theme="dark"] {
-  --bg-color: #121212;
+  --bg-color: #1a1a2e;
   --text-color: #e0e0e0;
-  --topbar-bg-color: #1f1f1f;
-  --sidebar-bg-color: #1a1a1a;
-  --content-bg-color: #121212;
-  --border-color: #404040;
-  --hover-bg-color: rgba(255, 255, 255, 0.1);
-  --hover-border-color: #606060;
-  --focus-ring-color: #ffa500;
-  --link-color: #ffa500;
-  --link-hover-color: #ff8c00;
-  --primary-color: #ffa500;
-  --menu-bg-color: #2d2d2d;
-  --menu-border-color: #404040;
-  --card-bg-color: #1e1e1e;
-  --card-border-color: #404040;
-  --bs-border-color: #404040;
+  --sidebar-bg-color: #16213e;
+  --sidebar-text-color: #e0e0e0;
+  --content-bg-color: #0f3460;
+  --border-color: #2d4a5e;
+  --hover-bg-color: rgba(124, 252, 0, 0.15);
+  --hover-border-color: #7cfc00;
+  --focus-ring-color: #7cfc00;
+  --link-color: #b794f6;
+  --link-hover-color: #9f7aea;
+  --primary-color: #7cfc00;
+  --secondary-color: #9b59b6;
+  --accent-color: #ff69b4;
+  --zombie-green: #7cfc00;
+  --zombie-purple: #9b59b6;
+  --zombie-pink: #ff69b4;
+  --menu-bg-color: #1e2a3a;
+  --menu-border-color: #2d4a5e;
+  --card-bg-color: #1e2a3a;
+  --card-border-color: #2d4a5e;
+  --bs-border-color: #2d4a5e;
+  --message-user-bg: #9b59b6;
+  --message-assistant-bg: #1e3a3a;
 }
 
 /* Apply theme variables */

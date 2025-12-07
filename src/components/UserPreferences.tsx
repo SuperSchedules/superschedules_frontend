@@ -1,5 +1,7 @@
 import { useUserPreferences } from '../hooks/useUserPreferences';
 import type { UserPreferences as UserPreferencesType } from '../types/index';
+import ThemeToggle from './ThemeToggle';
+import './UserPreferences.css';
 
 interface UserPreferencesProps {
   isOpen: boolean;
@@ -51,186 +53,216 @@ export default function UserPreferences({ isOpen, onClose }: UserPreferencesProp
   };
 
   return (
-    <div className="preferences-overlay">
-      <div className="preferences-modal">
+    <div className="preferences-overlay" onClick={handleClose}>
+      <div className="preferences-modal" onClick={(e) => e.stopPropagation()}>
         <div className="preferences-header">
-          <h3>Your Event Preferences</h3>
+          <h3>🧟 Your Zombie Preferences</h3>
           <div className="header-info">
-            <span className="auto-save-note">Changes saved automatically</span>
-            <button className="close-btn" onClick={handleClose}>×</button>
+            <span className="auto-save-note">✨ Auto-saved to your brain</span>
+            <button className="close-btn" onClick={handleClose} aria-label="Close preferences">×</button>
           </div>
         </div>
-        
+
         <div className="preferences-content">
-          <div className="preference-section">
-            <label>
-              Age:
-              <input
-                type="number"
-                min="1"
-                max="120"
-                value={preferences.age || ''}
-                onChange={(e) => updatePreferences({ 
-                  age: e.target.value ? parseInt(e.target.value) : undefined 
-                })}
-                placeholder="Your age"
-              />
-            </label>
-          </div>
-
-          <div className="preference-section">
-            <label>
-              Location:
-              <input
-                type="text"
-                value={preferences.location || ''}
-                onChange={(e) => updatePreferences({ location: e.target.value })}
-                placeholder="City or area (e.g., Boston, Cambridge)"
-              />
-            </label>
-          </div>
-
-          <div className="preference-section">
-            <label>
-              Family Size:
-              <input
-                type="number"
-                min="1"
-                max="20"
-                value={preferences.familySize || ''}
-                onChange={(e) => updatePreferences({ 
-                  familySize: e.target.value ? parseInt(e.target.value) : undefined 
-                })}
-                placeholder="Number of people"
-              />
-            </label>
-          </div>
-
-          <div className="preference-section">
-            <fieldset className="budget-fieldset">
-              <legend>Budget Range (select multiple)</legend>
-              <div className="budget-range-grid" role="group" aria-labelledby="budget-legend">
-                {[
-                  { value: 'free', label: 'Free events', description: '$0' },
-                  { value: 'low', label: 'Low cost', description: '$1-25' },
-                  { value: 'medium', label: 'Medium cost', description: '$25-75' },
-                  { value: 'high', label: 'Higher cost', description: '$75+' }
-                ].map(({ value, label, description }) => {
-                  const isSelected = (preferences.budgetRange || []).includes(value as any);
-                  return (
-                    <button
-                      key={value}
-                      type="button"
-                      role="checkbox"
-                      aria-checked={isSelected}
-                      aria-label={`${label}, ${description}${isSelected ? ', selected' : ', not selected'}`}
-                      className={`budget-tag ${isSelected ? 'selected' : ''}`}
-                      onClick={() => toggleBudgetRange(value as 'free' | 'low' | 'medium' | 'high')}
-                    >
-                      <div className="budget-label" aria-hidden="true">{label}</div>
-                      <div className="budget-description" aria-hidden="true">{description}</div>
-                      <span className="sr-only">
-                        {isSelected ? 'Selected' : 'Not selected'}
-                      </span>
-                    </button>
-                  );
-                })}
+          {/* Appearance Section */}
+          <div className="pref-section-card">
+            <h4 className="section-title">Appearance</h4>
+            <div className="section-content">
+              <div className="form-row">
+                <label className="row-label">Theme</label>
+                <div className="row-control">
+                  <ThemeToggle />
+                </div>
               </div>
-            </fieldset>
+            </div>
           </div>
 
-          <div className="preference-section">
-            <label>Preferred Time:</label>
-            <select
-              value={preferences.preferredTimes || 'any'}
-              onChange={(e) => updatePreferences({ 
-                preferredTimes: e.target.value as UserPreferencesType['preferredTimes']
-              })}
-            >
-              <option value="any">Any time</option>
-              <option value="morning">Morning (before 12pm)</option>
-              <option value="afternoon">Afternoon (12pm-6pm)</option>
-              <option value="evening">Evening (after 6pm)</option>
-            </select>
+          {/* Basic Info Section */}
+          <div className="pref-section-card">
+            <h4 className="section-title">Basic Information</h4>
+            <div className="section-content">
+              <div className="form-row">
+                <label htmlFor="pref-location" className="row-label">Location</label>
+                <div className="row-control">
+                  <input
+                    id="pref-location"
+                    type="text"
+                    value={preferences.location || ''}
+                    onChange={(e) => updatePreferences({ location: e.target.value })}
+                    placeholder="City or town"
+                    className="form-input"
+                  />
+                </div>
+              </div>
+
+              <div className="form-row">
+                <label htmlFor="pref-age" className="row-label">Age</label>
+                <div className="row-control">
+                  <input
+                    id="pref-age"
+                    type="number"
+                    min="1"
+                    max="120"
+                    value={preferences.age || ''}
+                    onChange={(e) => updatePreferences({
+                      age: e.target.value ? parseInt(e.target.value) : undefined
+                    })}
+                    placeholder="Your age"
+                    className="form-input"
+                  />
+                </div>
+              </div>
+
+              <div className="form-row">
+                <label htmlFor="pref-family" className="row-label">Family Size</label>
+                <div className="row-control">
+                  <input
+                    id="pref-family"
+                    type="number"
+                    min="1"
+                    max="20"
+                    value={preferences.familySize || ''}
+                    onChange={(e) => updatePreferences({
+                      familySize: e.target.value ? parseInt(e.target.value) : undefined
+                    })}
+                    placeholder="Number of people"
+                    className="form-input"
+                  />
+                </div>
+              </div>
+            </div>
           </div>
 
-          <div className="preference-section">
-            <label>Transportation:</label>
-            <select
-              value={preferences.transportation || 'any'}
-              onChange={(e) => updatePreferences({ 
-                transportation: e.target.value as UserPreferencesType['transportation']
-              })}
-            >
-              <option value="any">Any</option>
-              <option value="walking">Walking distance</option>
-              <option value="driving">Driving</option>
-              <option value="public">Public transportation</option>
-            </select>
+          {/* Event Preferences Section */}
+          <div className="pref-section-card">
+            <h4 className="section-title">Event Preferences</h4>
+            <div className="section-content">
+              <div className="form-row">
+                <label className="row-label">Budget Range</label>
+                <div className="row-control">
+                  <div className="button-group">
+                    {[
+                      { value: 'free', label: 'Free ($0)' },
+                      { value: 'low', label: 'Low ($1-25)' },
+                      { value: 'medium', label: 'Medium ($25-75)' },
+                      { value: 'high', label: 'High ($75+)' }
+                    ].map(({ value, label }) => {
+                      const isSelected = (preferences.budgetRange || []).includes(value as any);
+                      return (
+                        <button
+                          key={value}
+                          type="button"
+                          className={`option-btn ${isSelected ? 'selected' : ''}`}
+                          onClick={() => toggleBudgetRange(value as 'free' | 'low' | 'medium' | 'high')}
+                        >
+                          {label}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              </div>
+
+              <div className="form-row">
+                <label htmlFor="pref-time" className="row-label">Preferred Time</label>
+                <div className="row-control">
+                  <select
+                    id="pref-time"
+                    className="form-select"
+                    value={preferences.preferredTimes || 'any'}
+                    onChange={(e) => updatePreferences({
+                      preferredTimes: e.target.value as UserPreferencesType['preferredTimes']
+                    })}
+                  >
+                    <option value="any">Any time</option>
+                    <option value="morning">Morning (before 12pm)</option>
+                    <option value="afternoon">Afternoon (12pm-6pm)</option>
+                    <option value="evening">Evening (after 6pm)</option>
+                  </select>
+                </div>
+              </div>
+
+              <div className="form-row">
+                <label htmlFor="pref-transport" className="row-label">Transportation</label>
+                <div className="row-control">
+                  <select
+                    id="pref-transport"
+                    className="form-select"
+                    value={preferences.transportation || 'any'}
+                    onChange={(e) => updatePreferences({
+                      transportation: e.target.value as UserPreferencesType['transportation']
+                    })}
+                  >
+                    <option value="any">Any</option>
+                    <option value="walking">Walking distance</option>
+                    <option value="driving">Driving</option>
+                    <option value="public">Public transit</option>
+                  </select>
+                </div>
+              </div>
+            </div>
           </div>
 
-          <div className="preference-section">
-            <fieldset className="interests-fieldset">
-              <legend>Interests (select multiple)</legend>
-              <div className="interests-grid" role="group">
+          {/* Interests Section */}
+          <div className="pref-section-card">
+            <h4 className="section-title">Interests</h4>
+            <div className="section-content">
+              <div className="option-tags">
                 {COMMON_INTERESTS.map(interest => {
                   const isSelected = (preferences.interests || []).includes(interest);
                   return (
                     <button
                       key={interest}
                       type="button"
-                      role="checkbox"
-                      aria-checked={isSelected}
-                      className={`interest-tag ${isSelected ? 'selected' : ''}`}
+                      className={`option-tag ${isSelected ? 'selected' : ''}`}
                       onClick={() => toggleInterest(interest)}
                     >
                       {interest}
-                      <span className="sr-only">
-                        {isSelected ? ', selected' : ', not selected'}
-                      </span>
                     </button>
                   );
                 })}
               </div>
-            </fieldset>
+            </div>
           </div>
 
-          <div className="preference-section">
-            <fieldset className="accessibility-fieldset">
-              <legend>Accessibility Needs (select multiple)</legend>
-              <div className="accessibility-grid" role="group">
+          {/* Accessibility Section */}
+          <div className="pref-section-card">
+            <h4 className="section-title">Accessibility</h4>
+            <div className="section-content">
+              <div className="option-tags">
                 {ACCESSIBILITY_OPTIONS.map(option => {
                   const isSelected = (preferences.accessibility || []).includes(option);
                   return (
                     <button
                       key={option}
                       type="button"
-                      role="checkbox"
-                      aria-checked={isSelected}
-                      className={`accessibility-tag ${isSelected ? 'selected' : ''}`}
+                      className={`option-tag ${isSelected ? 'selected' : ''}`}
                       onClick={() => toggleAccessibility(option)}
                     >
                       {option}
-                      <span className="sr-only">
-                        {isSelected ? ', selected' : ', not selected'}
-                      </span>
                     </button>
                   );
                 })}
               </div>
-            </fieldset>
+            </div>
           </div>
         </div>
 
+        <div className="privacy-notice">
+          <p>
+            <strong>Privacy:</strong> Your preferences are stored locally in your browser.
+            When you chat with our AI assistant, these preferences are sent with your messages
+            to provide personalized event recommendations and will be logged in our system.
+          </p>
+        </div>
+
         <div className="preferences-footer">
-          <button className="reset-btn" onClick={resetPreferences}>
+          <button className="btn-reset" onClick={resetPreferences}>
             Reset to Defaults
           </button>
-          <div className="action-buttons">
-            <button className="close-btn-footer" onClick={handleClose}>
-              Close
-            </button>
-          </div>
+          <button className="btn-close" onClick={handleClose}>
+            Close
+          </button>
         </div>
       </div>
     </div>

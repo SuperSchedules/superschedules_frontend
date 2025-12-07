@@ -257,43 +257,85 @@ export class ChatService {
 
   // Keep this method for development fallback when event fetching fails
   generateMockEventsFromIds(eventIds: string[]): Event[] {
-    const baseEvents = {
-      'event-001': {
-        id: 'event-001',
+    const baseEvents: Record<string, any> = {
+      '1': {
+        id: '1',
         title: "Family Story Time",
-        description: "Interactive storytelling session perfect for young children",
+        description: "Interactive storytelling session perfect for young children. Join us for an engaging story time with songs, rhymes, and fun activities!",
         location: "Newton Public Library",
-        start: new Date(Date.now() + 24 * 60 * 60 * 1000), // Tomorrow
-        end: new Date(Date.now() + 24 * 60 * 60 * 1000 + 90 * 60 * 1000), // 1.5 hours later
+        place: {
+          name: "Newton Public Library - Children's Room",
+          address: "414 Centre St, Newton, MA 02458",
+          telephone: "(617) 796-1360",
+          latitude: 42.3370,
+          longitude: -71.2092
+        },
+        start: new Date(Date.now() + 24 * 60 * 60 * 1000),
+        end: new Date(Date.now() + 24 * 60 * 60 * 1000 + 90 * 60 * 1000),
+        start_time: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
+        end_time: new Date(Date.now() + 24 * 60 * 60 * 1000 + 90 * 60 * 1000).toISOString(),
+        age_range: "0-5",
+        price: "Free",
+        organizer: "Newton Public Library",
+        event_attendance_mode: "offline",
+        metadata_tags: ["story time", "children", "reading", "library"],
         suggested: true
       },
-      'event-002': {
-        id: 'event-002',
+      '2': {
+        id: '2',
         title: "Kids Craft Workshop",
-        description: "Creative arts and crafts activity",
+        description: "Creative arts and crafts activity for kids. Explore different materials and techniques to create fun projects!",
         location: "Newton Community Center",
+        place: {
+          name: "Newton Community Center",
+          address: "345 Walnut St, Newtonville, MA 02460",
+          telephone: "(617) 796-1500",
+          latitude: 42.3514,
+          longitude: -71.2080
+        },
         start: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000),
         end: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000 + 120 * 60 * 1000),
+        start_time: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000).toISOString(),
+        end_time: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000 + 120 * 60 * 1000).toISOString(),
+        age_range: "5-12",
+        price: "$10",
+        organizer: "Newton Recreation Department",
+        event_attendance_mode: "offline",
+        metadata_tags: ["arts & crafts", "kids", "creative", "workshop"],
         suggested: true
       },
-      'event-003': {
-        id: 'event-003',
+      '3': {
+        id: '3',
         title: "Playground Playdate",
-        description: "Supervised playground activities and games",
-        location: "Newton Park",
+        description: "Supervised playground activities and games for young children. Meet other families and enjoy outdoor fun!",
+        location: "Cold Spring Park",
+        place: {
+          name: "Cold Spring Park Playground",
+          address: "1200 Beacon St, Newton, MA 02468",
+          latitude: 42.3390,
+          longitude: -71.1967
+        },
         start: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000),
         end: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000 + 120 * 60 * 1000),
+        start_time: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000).toISOString(),
+        end_time: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000 + 120 * 60 * 1000).toISOString(),
+        age_range: "2-8",
+        price: "Free",
+        organizer: "Newton Parks & Recreation",
+        event_attendance_mode: "offline",
+        metadata_tags: ["outdoor", "playground", "playdate", "free"],
         suggested: true
       }
     };
-    
-    return eventIds.map(id => baseEvents[id as keyof typeof baseEvents] || {
+
+    return eventIds.map(id => baseEvents[id] || {
       id,
       title: `Event ${id}`,
       description: "Event details would come from database",
       location: "Location TBD",
       start: new Date(Date.now() + 24 * 60 * 60 * 1000),
       end: new Date(Date.now() + 24 * 60 * 60 * 1000 + 90 * 60 * 1000),
+      start_time: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
       suggested: true
     });
   }

@@ -3,41 +3,96 @@ import { useAuth } from '../auth';
 import { useUserPreferences } from '../hooks/useUserPreferences';
 import { ChatService } from '../services/chatService';
 import { FastAPIStreamingChatService, MockStreamingChatService } from '../services/streamingChatService';
-import UserPreferences from './UserPreferences';
 import type { ChatInterfaceProps, ChatMessage, Event } from '../types/index';
 import './ChatInterface.css';
-import './UserPreferences.css';
-import DateRangePicker from './DateRangePicker';
+import SearchPreferencesBar from './SearchPreferencesBar';
 import ChatComposer from './ChatComposer';
 import MessagesList from './MessagesList';
-import SuggestedEventsList from './SuggestedEventsList';
 
 // Message formatting moved into MessageItem
 
-const CHAT_STORAGE_KEY = 'superschedules_chat_messages';
-const SESSION_STORAGE_KEY = 'superschedules_session_id';
+// Storage key helpers
+const CHAT_EXPIRY_DAYS = 7;
 
-// Default welcome message
+const getChatStorageKey = (userId?: number | string) => {
+  const userPart = userId ? `user${userId}` : 'anonymous';
+  return `superschedules_chats_${userPart}`;
+};
+
+const getSessionStorageKey = (userId?: number | string) => {
+  const userPart = userId ? `user${userId}` : 'anonymous';
+  return `superschedules_session_${userPart}`;
+};
+
+// Default welcome message - Zombie themed!
 const getDefaultMessages = (): ChatMessage[] => [
   {
     id: 1,
     type: 'assistant',
-    content: "Hi! I'm here to help you find events. Tell me what you're looking for - like activities for specific ages, locations, or timeframes.",
+    content: "🧟 Braaains... I mean, events! I'm your friendly zombie guide to local happenings. Tell me what you're hungry for - activities for little monsters, grown-up zombies, or the whole undead family!",
     timestamp: new Date()
   }
 ];
 
-// Load messages from localStorage
-const loadPersistedMessages = (): ChatMessage[] => {
+// Clean up old chats (older than CHAT_EXPIRY_DAYS)
+const cleanupOldChats = () => {
   try {
-    const stored = localStorage.getItem(CHAT_STORAGE_KEY);
+    const keys = Object.keys(localStorage);
+    const chatKeys = keys.filter(k => k.startsWith('superschedules_chats_'));
+
+    chatKeys.forEach(key => {
+      try {
+        const stored = localStorage.getItem(key);
+        if (stored) {
+          const data = JSON.parse(stored);
+          const savedAt = data.savedAt ? new Date(data.savedAt) : null;
+
+          if (savedAt) {
+            const daysOld = (Date.now() - savedAt.getTime()) / (1000 * 60 * 60 * 24);
+            if (daysOld > CHAT_EXPIRY_DAYS) {
+              console.log(`Removing expired chat: ${key} (${Math.floor(daysOld)} days old)`);
+              localStorage.removeItem(key);
+              // Also remove associated session
+              const sessionKey = key.replace('chats', 'session');
+              localStorage.removeItem(sessionKey);
+            }
+          }
+        }
+      } catch (err) {
+        console.warn(`Failed to process ${key}:`, err);
+      }
+    });
+  } catch (error) {
+    console.warn('Failed to cleanup old chats:', error);
+  }
+};
+
+// Load messages from localStorage
+const loadPersistedMessages = (userId?: number | string): ChatMessage[] => {
+  try {
+    const key = getChatStorageKey(userId);
+    const stored = localStorage.getItem(key);
     if (stored) {
-      const parsed = JSON.parse(stored);
+      const data = JSON.parse(stored);
+      const savedAt = data.savedAt ? new Date(data.savedAt) : null;
+
+      // Check if expired
+      if (savedAt) {
+        const daysOld = (Date.now() - savedAt.getTime()) / (1000 * 60 * 60 * 24);
+        if (daysOld > CHAT_EXPIRY_DAYS) {
+          console.log('Chat history expired, clearing');
+          localStorage.removeItem(key);
+          return getDefaultMessages();
+        }
+      }
+
       // Convert timestamp strings back to Date objects
-      return parsed.map((msg: any) => ({
+      const messages = (data.messages || data).map((msg: any) => ({
         ...msg,
         timestamp: new Date(msg.timestamp)
       }));
+
+      return messages;
     }
   } catch (error) {
     console.warn('Failed to load persisted chat messages:', error);
@@ -45,22 +100,32 @@ const loadPersistedMessages = (): ChatMessage[] => {
   return getDefaultMessages();
 };
 
-export default function ChatInterface({ 
-  onSuggestedEvents, 
+export default function ChatInterface({
+  onSuggestedEvents,
   onSuggestionsLoading,
+  onFindMoreLike,
+  onClearEvents,
   suggestedEvents = [],
   loadingSuggestions = false,
-  isVisible = true 
+  isVisible = true
 }: ChatInterfaceProps) {
-  const [messages, setMessages] = useState<ChatMessage[]>(loadPersistedMessages);
+  const { user, authFetch } = useAuth();
+  const userId = user?.id;
+
+  // Run cleanup on mount
+  useEffect(() => {
+    cleanupOldChats();
+  }, []);
+
+  const [messages, setMessages] = useState<ChatMessage[]>(() => loadPersistedMessages(userId));
   const [inputMessage, setInputMessage] = useState<string>('');
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [sessionId, setSessionId] = useState<string | null>(() => {
-    return localStorage.getItem(SESSION_STORAGE_KEY);
+    const key = getSessionStorageKey(userId);
+    return localStorage.getItem(key);
   });
   const useStreaming = true; // Always use streaming mode
   const [streamingCleanup, setStreamingCleanup] = useState<(() => void) | null>(null);
-  const [showPreferences, setShowPreferences] = useState<boolean>(false);
   const [dateFrom, setDateFrom] = useState<string>(() => {
     // Default to today
     return new Date().toISOString().split('T')[0];
@@ -71,9 +136,13 @@ export default function ChatInterface({
     nextWeek.setDate(nextWeek.getDate() + 7);
     return nextWeek.toISOString().split('T')[0];
   });
+  // Additional filter states
+  const [location, setLocation] = useState<string>('');
+  const [ageMin, setAgeMin] = useState<number>(0);
+  const [ageMax, setAgeMax] = useState<number>(18);
+  const [maxPrice, setMaxPrice] = useState<number>(100);
   // Date helpers are handled within DateRangePicker
   // MessagesList will handle scroll management
-  const { authFetch } = useAuth();
   const { preferences, getPreferencesContext } = useUserPreferences();
   const [chatService] = useState(() => new ChatService(authFetch));
   const [streamingService] = useState(() => {
@@ -91,18 +160,24 @@ export default function ChatInterface({
   // Persist messages to localStorage whenever they change
   useEffect(() => {
     try {
-      localStorage.setItem(CHAT_STORAGE_KEY, JSON.stringify(messages));
+      const key = getChatStorageKey(userId);
+      const data = {
+        messages,
+        savedAt: new Date().toISOString()
+      };
+      localStorage.setItem(key, JSON.stringify(data));
     } catch (error) {
       console.warn('Failed to persist chat messages:', error);
     }
-  }, [messages]);
+  }, [messages, userId]);
 
   // Persist session ID when it changes
   useEffect(() => {
     if (sessionId) {
-      localStorage.setItem(SESSION_STORAGE_KEY, sessionId);
+      const key = getSessionStorageKey(userId);
+      localStorage.setItem(key, sessionId);
     }
-  }, [sessionId]);
+  }, [sessionId, userId]);
 
   // Clear chat function
   const clearChat = () => {
@@ -110,8 +185,13 @@ export default function ChatInterface({
     setMessages(defaultMessages);
     setSessionId(null);
     onSuggestedEvents([]); // Clear suggested events
-    localStorage.removeItem(CHAT_STORAGE_KEY);
-    localStorage.removeItem(SESSION_STORAGE_KEY);
+    if (onClearEvents) {
+      onClearEvents(); // Clear accumulated events
+    }
+    const chatKey = getChatStorageKey(userId);
+    const sessionKey = getSessionStorageKey(userId);
+    localStorage.removeItem(chatKey);
+    localStorage.removeItem(sessionKey);
     console.log('Chat cleared');
   };
 
@@ -126,7 +206,7 @@ export default function ChatInterface({
     };
   }, [streamingCleanup]);
 
-  const handleSendMessage = async () => {
+  const handleSendMessage = async (moreLikeEventId?: string | number) => {
     if (!inputMessage.trim() || isLoading) return;
 
     const userMessage = {
@@ -147,9 +227,9 @@ export default function ChatInterface({
     }
 
     if (useStreaming) {
-      await handleStreamingMessage(userMessage.content);
+      await handleStreamingMessage(userMessage.content, moreLikeEventId);
     } else {
-      await handleRegularMessage(userMessage.content);
+      await handleRegularMessage(userMessage.content, moreLikeEventId);
     }
   };
 
@@ -196,7 +276,7 @@ export default function ChatInterface({
     return history;
   };
 
-  const handleStreamingMessage = async (message: string) => {
+  const handleStreamingMessage = async (message: string, moreLikeEventId?: string | number) => {
     // Create placeholder message that will be updated with streaming content
     const streamingMessageId = Date.now() + 1000;
     const streamingMessage = {
@@ -240,9 +320,18 @@ export default function ChatInterface({
       // Error handler
       (error: string) => {
         console.error('Streaming error:', error);
-        // Fallback to non-streaming message on error
+        // Remove the empty streaming message
+        setMessages(prev => prev.filter(msg => msg.id !== streamingMessageId));
+
+        // Add error message
+        const errorMessage = {
+          id: Date.now() + 1,
+          type: 'assistant',
+          content: 'Sorry, I\'m having trouble connecting to the chat service. Please check that the backend is running.',
+          timestamp: new Date()
+        };
+        setMessages(prev => [...prev, errorMessage]);
         setIsLoading(false);
-        handleRegularMessage(message);
       },
       // Context
       {
@@ -256,7 +345,8 @@ export default function ChatInterface({
         date_range: {
           from: dateFrom,
           to: dateTo
-        }
+        },
+        more_like_event_id: moreLikeEventId
       },
       // Single model mode
       true
@@ -264,6 +354,20 @@ export default function ChatInterface({
 
     setStreamingCleanup(() => cleanup);
   };
+
+  // Handler for "Find more like this" button
+  const handleFindMoreLike = useCallback((event: Event) => {
+    const message = `Find more events like "${event.title}"`;
+    setInputMessage(message);
+    // Call parent handler if provided
+    if (onFindMoreLike) {
+      onFindMoreLike(event);
+    }
+    // Trigger send with the event ID
+    setTimeout(() => {
+      handleSendMessage(event.id);
+    }, 100);
+  }, [onFindMoreLike]);
 
   const handleSuggestedEvents = useCallback(async (suggestedIds: (string | number)[]) => {
     console.log('handleSuggestedEvents called with:', suggestedIds);
@@ -311,7 +415,7 @@ export default function ChatInterface({
     }
   }, [messages, handleSuggestedEvents]);
 
-  const handleRegularMessage = async (message: string) => {
+  const handleRegularMessage = async (message: string, moreLikeEventId?: string | number) => {
     try {
       const response = await chatService.sendMessage(message, {
         location: preferences.location || null,
@@ -325,7 +429,8 @@ export default function ChatInterface({
         date_range: {
           from: dateFrom,
           to: dateTo
-        }
+        },
+        more_like_event_id: moreLikeEventId
       });
 
       if (response.success) {
@@ -386,51 +491,34 @@ export default function ChatInterface({
   return (
     <div className="chat-interface" aria-busy={isLoading}>
       <div className="chat-header">
-        <h3>Event Assistant</h3>
-        <div className="header-controls">
-          <button
-            className="preferences-btn"
-            onClick={() => setShowPreferences(true)}
-            title="Set your event preferences"
-            aria-label="Set event preferences"
-          >
-            ⚙️ Preferences
-          </button>
-          <button
-            className="clear-chat-btn"
-            onClick={clearChat}
-            title="Clear conversation history"
-            aria-label="Clear conversation history"
-          >
-            🗑️ Clear Chat
-          </button>
-        </div>
+        <SearchPreferencesBar
+          dateFrom={dateFrom}
+          dateTo={dateTo}
+          onDateChange={({ from, to }) => {
+            setDateFrom(from);
+            setDateTo(to);
+          }}
+          location={location}
+          onLocationChange={setLocation}
+          ageMin={ageMin}
+          ageMax={ageMax}
+          onAgeChange={(min, max) => {
+            setAgeMin(min);
+            setAgeMax(max);
+          }}
+          maxPrice={maxPrice}
+          onMaxPriceChange={setMaxPrice}
+        />
       </div>
-      
-      <DateRangePicker
-        from={dateFrom}
-        to={dateTo}
-        onChange={({ from, to }) => {
-          setDateFrom(from);
-          setDateTo(to);
-        }}
-      />
-      
+
       <MessagesList messages={messages} streaming={useStreaming} isLoading={isLoading} />
 
-      
+
       <ChatComposer
         value={inputMessage}
         onChange={setInputMessage}
         onSend={handleSendMessage}
         disabled={isLoading}
-      />
-
-      <SuggestedEventsList events={suggestedEvents} loading={loadingSuggestions} />
-      
-      <UserPreferences 
-        isOpen={showPreferences} 
-        onClose={() => setShowPreferences(false)} 
       />
     </div>
   );

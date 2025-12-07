@@ -41,7 +41,7 @@ export default function CreateUser() {
         <h2>Create Account</h2>
         <div className="mb-3">
           <label className="form-label">
-            First name
+            First name (optional)
             <input
               type="text"
               className="form-control"
@@ -54,7 +54,7 @@ export default function CreateUser() {
         </div>
         <div className="mb-3">
           <label className="form-label">
-            Last name
+            Last name (optional)
             <input
               type="text"
               className="form-control"
@@ -93,7 +93,7 @@ export default function CreateUser() {
         </div>
         <div className="mb-3">
           <label className="form-label">
-            Zip code
+            Zip code (optional)
             <input
               type="text"
               className="form-control"
@@ -105,6 +105,16 @@ export default function CreateUser() {
           </label>
         </div>
         <p>An email will be sent to verify your account.</p>
+        <div className="alert alert-secondary" role="note">
+          <small>
+            <strong>Note:</strong> Name and zip code are optional. If provided, your zip code will be used to help narrow down event searches to your local area by default.
+          </small>
+        </div>
+        <div className="alert alert-info" role="note">
+          <small>
+            <strong>Privacy:</strong> Your email address will be stored on our server and only used for account recovery and password reset purposes.
+          </small>
+        </div>
         {error && <div role="alert">{error}</div>}
         <div className="d-flex justify-content-between mt-4">
           <button

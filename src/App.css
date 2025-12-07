@@ -1,27 +1,34 @@
 .layout {
   display: flex;
-  flex-direction: column;
-  height: 100vh;
+  min-height: 100vh;
+  max-height: 100vh;
   background-color: var(--bg-color);
   color: var(--text-color);
   transition: background-color 0.2s ease-in-out, color 0.2s ease-in-out;
   overflow: hidden;
 }
 
-.main {
+/* New 3-column layout */
+.app-sidebar {
+  width: 240px;
+  min-width: 240px;
+  background-color: var(--sidebar-bg-color);
+  color: var(--sidebar-text-color);
   display: flex;
-  flex: 1;
+  flex-direction: column;
+  border-right: 2px solid var(--zombie-green);
   overflow: hidden;
 }
 
 .content {
   flex: 1;
-  padding: 1rem;
-  background-color: var(--content-bg-color);
+  display: flex;
+  background-color: var(--bg-color);
   color: var(--text-color);
   transition: background-color 0.2s ease-in-out, color 0.2s ease-in-out;
-  overflow-y: auto;
-  height: calc(100vh - 60px);
+  overflow: hidden;
+  height: 100vh;
+  width: 100%;
 }
 
 /* Override Bootstrap styles for dark mode */
