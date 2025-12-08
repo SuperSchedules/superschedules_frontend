@@ -1,4 +1,5 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../auth';
 import ChatInterface from '../components/ChatInterface';
 import EventSidebar from '../components/EventSidebar';
@@ -7,6 +8,7 @@ import './Home.css';
 
 export default function Home() {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const [accumulatedEvents, setAccumulatedEvents] = useState<Event[]>([]);
   const [loadingSuggestions, setLoadingSuggestions] = useState(false);
 
@@ -31,15 +33,15 @@ export default function Home() {
     // The actual logic is handled in ChatInterface
   }, []);
 
+  // Redirect to login if not authenticated
+  useEffect(() => {
+    if (!user) {
+      navigate('/login');
+    }
+  }, [user, navigate]);
+
   if (!user) {
-    return (
-      <div className="home-page">
-        <div className="welcome-message">
-          <h1>Welcome to Superschedules</h1>
-          <p>Please log in to start discovering events.</p>
-        </div>
-      </div>
-    );
+    return null;
   }
 
   return (

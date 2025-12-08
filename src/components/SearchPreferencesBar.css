@@ -145,13 +145,11 @@
   }
 
   .preferences-row-main {
-    flex-direction: column;
     align-items: stretch;
   }
 
   .expand-filters-btn {
-    width: 100%;
-    justify-content: center;
+    flex-shrink: 0;
   }
 
   .preferences-row-expanded {

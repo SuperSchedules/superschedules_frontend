@@ -1,6 +1,7 @@
 import { useUserPreferences } from '../hooks/useUserPreferences';
 import type { UserPreferences as UserPreferencesType } from '../types/index';
-import ThemeToggle from './ThemeToggle';
+import { useTheme } from '../contexts/ThemeContext';
+import type { ThemeType } from '../contexts/ThemeContext';
 import './UserPreferences.css';
 
 interface UserPreferencesProps {
@@ -21,6 +22,8 @@ const ACCESSIBILITY_OPTIONS = [
 
 export default function UserPreferences({ isOpen, onClose }: UserPreferencesProps) {
   const { preferences, updatePreferences, resetPreferences } = useUserPreferences();
+  const { theme, setTheme } = useTheme();
+  const isZombieTheme = theme === 'zombie-light' || theme === 'zombie-dark';
 
   if (!isOpen) return null;
 
@@ -56,9 +59,9 @@ export default function UserPreferences({ isOpen, onClose }: UserPreferencesProp
     <div className="preferences-overlay" onClick={handleClose}>
       <div className="preferences-modal" onClick={(e) => e.stopPropagation()}>
         <div className="preferences-header">
-          <h3>🧟 Your Zombie Preferences</h3>
+          <h3>{isZombieTheme ? '🧟 Your Zombie Preferences' : 'Your Preferences'}</h3>
           <div className="header-info">
-            <span className="auto-save-note">✨ Auto-saved to your brain</span>
+            <span className="auto-save-note">{isZombieTheme ? '✨ Auto-saved to your brain' : 'Auto-saved locally'}</span>
             <button className="close-btn" onClick={handleClose} aria-label="Close preferences">×</button>
           </div>
         </div>
@@ -69,9 +72,19 @@ export default function UserPreferences({ isOpen, onClose }: UserPreferencesProp
             <h4 className="section-title">Appearance</h4>
             <div className="section-content">
               <div className="form-row">
-                <label className="row-label">Theme</label>
+                <label htmlFor="pref-theme" className="row-label">Theme</label>
                 <div className="row-control">
-                  <ThemeToggle />
+                  <select
+                    id="pref-theme"
+                    className="form-select"
+                    value={theme}
+                    onChange={(e) => setTheme(e.target.value as ThemeType)}
+                  >
+                    <option value="light">Light (Professional)</option>
+                    <option value="dark">Dark (Professional)</option>
+                    <option value="zombie-light">Zombie Light (Fun)</option>
+                    <option value="zombie-dark">Zombie Dark (Fun)</option>
+                  </select>
                 </div>
               </div>
             </div>

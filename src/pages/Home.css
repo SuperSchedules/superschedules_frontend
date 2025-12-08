@@ -2,6 +2,7 @@
   color: var(--text-color);
   height: 100vh;
   display: flex;
+  flex-direction: column;
   overflow: hidden;
   width: 100%;
 }
@@ -34,20 +35,30 @@
   background-color: var(--bg-color);
 }
 
-/* Mobile layout - stack vertically */
+/* Hide events column if it's empty */
+.events-column:empty {
+  display: none;
+  flex: 0;
+  min-width: 0;
+}
+
+/* Mobile layout - events sidebar has slide-in behavior */
 @media (max-width: 767px) {
   .home-layout {
-    flex-direction: column;
+    position: relative;
   }
 
   .chat-column {
     flex: 1;
     border-right: none;
-    border-bottom: 2px solid var(--zombie-green);
   }
 
-  /* Events column is hidden on mobile, shown via slide-out */
   .events-column {
+    /* EventSidebar component handles its own mobile slide-in behavior */
+    display: contents;
+  }
+
+  .events-column:empty {
     display: none;
   }
 }

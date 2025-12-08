@@ -567,6 +567,10 @@
 
 /* Mobile responsiveness */
 @media (max-width: 768px) {
+  .chat-interface {
+    height: 100%;
+  }
+
   .dual-responses {
     grid-template-columns: 1fr;
     gap: 0.75rem;
@@ -579,10 +583,15 @@
 
   .chat-input {
     flex-direction: column;
+    position: sticky;
+    bottom: 0;
+    z-index: 10;
+    padding: 0.75rem;
   }
 
   .send-button {
     align-self: stretch;
+    padding: 0.75rem 1rem;
   }
 
   .chat-header {
@@ -600,18 +609,29 @@
   }
 
   .date-range-inputs {
-    flex-direction: column;
+    flex-direction: row;
     gap: 0.5rem;
-    align-items: stretch;
+    align-items: center;
   }
 
   .date-input-group {
-    justify-content: space-between;
+    flex: 1;
+    min-width: 0;
+  }
+
+  .date-input-group label {
+    font-size: 0.75rem;
   }
 
   .date-input-group input[type="date"] {
     flex: 1;
     min-width: 0;
+    font-size: 0.8rem;
+    padding: 0.4rem 0.5rem;
+  }
+
+  .chat-messages {
+    padding-bottom: 1rem;
   }
 }
 

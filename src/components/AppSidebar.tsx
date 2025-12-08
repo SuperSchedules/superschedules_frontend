@@ -1,6 +1,7 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { useAuth } from '../auth';
+import { useTheme } from '../contexts/ThemeContext';
 import ThemeToggle from './ThemeToggle';
 import UserPreferences from './UserPreferences';
 import About from '../pages/About';
@@ -9,13 +10,31 @@ import './AppSidebar.css';
 
 export default function AppSidebar() {
   const { user, logout } = useAuth();
+  const { theme } = useTheme();
   const location = useLocation();
   const [showPreferences, setShowPreferences] = useState(false);
   const [showAbout, setShowAbout] = useState(false);
   const [showSuggestSite, setShowSuggestSite] = useState(false);
-  const [isCollapsed, setIsCollapsed] = useState(false);
+
+  // Check if mobile on mount and whenever window resizes
+  const [isCollapsed, setIsCollapsed] = useState(() => {
+    return window.innerWidth <= 768;
+  });
 
   const isActive = (path: string) => location.pathname === path;
+  const isZombieTheme = theme === 'zombie-light' || theme === 'zombie-dark';
+
+  // Handle window resize to auto-collapse on mobile
+  useEffect(() => {
+    const handleResize = () => {
+      if (window.innerWidth <= 768) {
+        setIsCollapsed(true);
+      }
+    };
+
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   return (
     <>
@@ -33,12 +52,14 @@ export default function AppSidebar() {
         {/* Logo/Brand */}
         <div className="sidebar-header">
           <Link to="/" className="sidebar-brand">
-            <span className="zombie-icon">🧟</span>
-            {!isCollapsed && (
-              <>
-                <h1 className="brand-title">EventZombie</h1>
-              </>
+            {isZombieTheme && !isCollapsed && (
+              <span className="zombie-icon">
+                <img src="/zombie-yoga.svg" alt="Zombie doing yoga" />
+              </span>
             )}
+            <h1 className="brand-title">
+              {isCollapsed ? 'EZ' : 'EventZombie'}
+            </h1>
           </Link>
         </div>
 
@@ -58,9 +79,13 @@ export default function AppSidebar() {
             className="nav-item nav-button"
             title="Suggest a Site"
           >
-            <span className="nav-icon zombie-reading-icon">
-              <img src="/zombie-reading.svg" alt="Zombie reading" />
-            </span>
+            {isZombieTheme ? (
+              <span className="nav-icon zombie-reading-icon">
+                <img src="/zombie-reading.svg" alt="Zombie reading" />
+              </span>
+            ) : (
+              <span className="nav-icon">📝</span>
+            )}
             {!isCollapsed && <span className="nav-label">Suggest a Site</span>}
           </button>
         </nav>
@@ -93,7 +118,7 @@ export default function AppSidebar() {
                 title={isCollapsed ? `Log out ${user.username}` : 'Log out'}
               >
                 <div className="user-avatar">
-                  <span className="avatar-icon">🧟‍♂️</span>
+                  <span className="avatar-icon">{isZombieTheme ? '🧟‍♂️' : '👤'}</span>
                 </div>
                 {!isCollapsed && (
                   <div className="user-details">

@@ -8,8 +8,64 @@
   -moz-osx-font-smoothing: grayscale;
 }
 
-/* Light theme variables - Zombie Cute */
+/* Professional Light theme - black, white, grey */
 :root[data-theme="light"] {
+  --bg-color: #f5f5f5;
+  --text-color: #212121;
+  --sidebar-bg-color: #ffffff;
+  --sidebar-text-color: #424242;
+  --content-bg-color: #ffffff;
+  --border-color: #e0e0e0;
+  --hover-bg-color: #f5f5f5;
+  --hover-border-color: #9e9e9e;
+  --focus-ring-color: #616161;
+  --link-color: #1976d2;
+  --link-hover-color: #1565c0;
+  --primary-color: #424242;
+  --secondary-color: #757575;
+  --accent-color: #9e9e9e;
+  --zombie-green: #424242;
+  --zombie-purple: #757575;
+  --zombie-pink: #9e9e9e;
+  --menu-bg-color: #ffffff;
+  --menu-border-color: #e0e0e0;
+  --card-bg-color: #ffffff;
+  --card-border-color: #e0e0e0;
+  --bs-border-color: #e0e0e0;
+  --message-user-bg: #757575;
+  --message-assistant-bg: #f5f5f5;
+}
+
+/* Professional Dark theme - black, white, grey */
+:root[data-theme="dark"] {
+  --bg-color: #121212;
+  --text-color: #e0e0e0;
+  --sidebar-bg-color: #1e1e1e;
+  --sidebar-text-color: #e0e0e0;
+  --content-bg-color: #1e1e1e;
+  --border-color: #424242;
+  --hover-bg-color: #2c2c2c;
+  --hover-border-color: #616161;
+  --focus-ring-color: #9e9e9e;
+  --link-color: #90caf9;
+  --link-hover-color: #64b5f6;
+  --primary-color: #e0e0e0;
+  --secondary-color: #9e9e9e;
+  --accent-color: #757575;
+  --zombie-green: #e0e0e0;
+  --zombie-purple: #9e9e9e;
+  --zombie-pink: #757575;
+  --menu-bg-color: #2c2c2c;
+  --menu-border-color: #424242;
+  --card-bg-color: #2c2c2c;
+  --card-border-color: #424242;
+  --bs-border-color: #424242;
+  --message-user-bg: #616161;
+  --message-assistant-bg: #2c2c2c;
+}
+
+/* Zombie Light theme - fun and playful */
+:root[data-theme="zombie-light"] {
   --bg-color: #f0f4f0;
   --text-color: #1a1a1a;
   --sidebar-bg-color: #2d3748;
@@ -36,8 +92,8 @@
   --message-assistant-bg: #e8f5e9;
 }
 
-/* Dark theme variables - Zombie Cute */
-:root[data-theme="dark"] {
+/* Zombie Dark theme - fun and playful */
+:root[data-theme="zombie-dark"] {
   --bg-color: #1a1a2e;
   --text-color: #e0e0e0;
   --sidebar-bg-color: #16213e;

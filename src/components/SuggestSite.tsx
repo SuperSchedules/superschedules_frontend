@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useAuth } from '../auth';
+import { useTheme } from '../contexts/ThemeContext';
 import { SOURCES_ENDPOINTS } from '../constants/api';
 import './SuggestSite.css';
 
@@ -10,11 +11,13 @@ interface SuggestSiteProps {
 
 export default function SuggestSite({ isOpen, onClose }: SuggestSiteProps) {
   const { authFetch } = useAuth();
+  const { theme } = useTheme();
   const [url, setUrl] = useState('');
   const [name, setName] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState(false);
+  const isZombieTheme = theme === 'zombie-light' || theme === 'zombie-dark';
 
   if (!isOpen) return null;
 
@@ -58,7 +61,7 @@ export default function SuggestSite({ isOpen, onClose }: SuggestSiteProps) {
       <div className="suggest-site-modal" onClick={(e) => e.stopPropagation()}>
         <div className="suggest-site-header">
           <div className="header-with-icon">
-            <span className="zombie-reader">🧟‍♂️📖</span>
+            {isZombieTheme && <span className="zombie-reader">🧟‍♂️📖</span>}
             <h2>Suggest an Event Site</h2>
           </div>
           <button className="close-btn" onClick={handleClose} aria-label="Close" disabled={isSubmitting}>
