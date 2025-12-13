@@ -1,29 +1,47 @@
-import React from 'react';
 import { format } from 'date-fns';
 import type { Event } from '../types';
+import { formatEventLocation, getEventFullAddress, getEventCoordinates } from '../utils';
 
 interface SuggestedEventCardProps {
   event: Event;
 }
 
 export default function SuggestedEventCard({ event }: SuggestedEventCardProps) {
+  const locationDisplay = formatEventLocation(event);
+  const coordinates = getEventCoordinates(event);
+  const fullAddress = getEventFullAddress(event);
+
+  // Generate maps link - prefer coordinates for accuracy, fallback to address search
+  const getMapsUrl = () => {
+    if (coordinates) {
+      return `https://www.google.com/maps/search/?api=1&query=${coordinates.latitude},${coordinates.longitude}`;
+    } else if (fullAddress) {
+      return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(fullAddress)}`;
+    }
+    return null;
+  };
+
+  const mapsUrl = getMapsUrl();
+
   return (
     <div className="suggested-event-card-full">
       {/* Top line: Title and Location */}
       <div className="event-header">
         <h4 className="event-title">{event.title}</h4>
-        {event.location && (
+        {locationDisplay && locationDisplay !== 'Location TBD' && (
           <div className="event-location">
             <i className="bi bi-geo-alt-fill"></i>
-            <span>{event.location}</span>
-            <a
-              href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(event.location)}`}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="directions-link"
-            >
-              Directions
-            </a>
+            <span>{locationDisplay}</span>
+            {mapsUrl && (
+              <a
+                href={mapsUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="directions-link"
+              >
+                Directions
+              </a>
+            )}
           </div>
         )}
       </div>

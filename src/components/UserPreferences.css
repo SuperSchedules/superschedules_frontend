@@ -277,14 +277,19 @@
 
 .btn-reset,
 .btn-close {
-  padding: 0.5rem 1.25rem;
+  padding: 0.6rem 1.5rem;
   border: none;
   border-radius: 6px;
-  font-size: 0.9rem;
+  font-size: 0.95rem;
   cursor: pointer;
   transition: all 0.2s ease;
   font-family: inherit;
   font-weight: 500;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  line-height: 1.2;
 }
 
 .btn-reset {

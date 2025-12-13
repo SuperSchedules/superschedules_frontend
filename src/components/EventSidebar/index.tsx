@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import EventSidebarToggle from './EventSidebarToggle';
 import EventSidebarHeader from './EventSidebarHeader';
-import EventsList from './EventsList';
+import EventsPanel from './EventsPanel';
 import type { Event } from '../../types';
 import './EventSidebar.css';
 
@@ -68,7 +68,7 @@ export default function EventSidebar({ events, loading = false, onFindMoreLike }
         />
 
         <div className="events-sidebar-content">
-          <EventsList
+          <EventsPanel
             events={events}
             loading={loading}
             onFindMoreLike={onFindMoreLike}

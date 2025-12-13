@@ -1,0 +1,194 @@
+.events-panel {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  overflow: hidden;
+}
+
+/* View Mode Toggle */
+.view-mode-toggle {
+  display: flex;
+  gap: 4px;
+  padding: 8px 12px;
+  background: var(--bs-secondary-bg);
+  border-bottom: 1px solid var(--bs-border-color);
+  flex-shrink: 0;
+}
+
+.toggle-btn {
+  flex: 1;
+  padding: 6px 10px;
+  border: 1px solid var(--bs-border-color);
+  background: var(--bs-body-bg);
+  color: var(--bs-secondary-color);
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-size: 0.875rem;
+}
+
+.toggle-btn:hover {
+  background: var(--bs-secondary-bg);
+  color: var(--bs-body-color);
+}
+
+.toggle-btn.active {
+  background: var(--bs-primary);
+  color: white;
+  border-color: var(--bs-primary);
+}
+
+.toggle-btn i {
+  font-size: 1rem;
+}
+
+/* Panel Content */
+.events-panel-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  min-height: 0;
+}
+
+/* Split View - list on top, map on bottom */
+.events-panel-content.split {
+  flex-direction: column;
+}
+
+.events-panel-content.split .events-list-section {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+}
+
+.events-panel-content.split .events-map-section {
+  flex: 0 0 250px;
+  min-height: 200px;
+  border-top: 1px solid var(--bs-border-color);
+}
+
+/* List Only View */
+.events-panel-content.list .events-list-section {
+  flex: 1;
+  overflow-y: auto;
+}
+
+.events-panel-content.list .events-map-section {
+  display: none;
+}
+
+/* Map Only View */
+.events-panel-content.map .events-list-section {
+  display: none;
+}
+
+.events-panel-content.map .events-map-section {
+  flex: 1;
+  min-height: 300px;
+}
+
+/* Events List Section */
+.events-list-section {
+  display: flex;
+  flex-direction: column;
+  padding: 12px;
+}
+
+.events-count {
+  font-size: 0.875rem;
+  color: var(--bs-secondary-color);
+  margin-bottom: 12px;
+  padding: 8px 12px;
+  background: var(--bs-secondary-bg);
+  border-radius: 6px;
+  text-align: center;
+  flex-shrink: 0;
+}
+
+.map-count {
+  margin-left: 4px;
+  color: var(--bs-primary);
+}
+
+.events-list {
+  display: flex;
+  flex-direction: column;
+}
+
+/* Event Card Wrapper with selection highlight */
+.event-card-wrapper {
+  transition: all 0.2s ease;
+  border-radius: 8px;
+}
+
+.event-card-wrapper.selected {
+  box-shadow: 0 0 0 2px var(--bs-primary);
+}
+
+.event-card-wrapper.selected .expandable-event-card {
+  border-color: var(--bs-primary);
+}
+
+/* Map Section */
+.events-map-section {
+  padding: 12px;
+  padding-top: 0;
+}
+
+.events-panel-content.split .events-map-section {
+  padding-top: 12px;
+}
+
+.events-map-section .events-map-container {
+  height: 100%;
+}
+
+/* Loading State */
+.loading-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 40px 20px;
+  text-align: center;
+  height: 100%;
+}
+
+.loading-state p {
+  margin-top: 16px;
+  color: var(--bs-secondary-color);
+}
+
+/* Scrollbar styling */
+.events-list-section::-webkit-scrollbar {
+  width: 8px;
+}
+
+.events-list-section::-webkit-scrollbar-track {
+  background: var(--bs-secondary-bg);
+}
+
+.events-list-section::-webkit-scrollbar-thumb {
+  background: var(--bs-border-color);
+  border-radius: 4px;
+}
+
+.events-list-section::-webkit-scrollbar-thumb:hover {
+  background: var(--bs-secondary-color);
+}
+
+/* Responsive adjustments */
+@media (max-width: 767px) {
+  .events-panel-content.split .events-map-section {
+    flex: 0 0 200px;
+  }
+
+  .view-mode-toggle {
+    padding: 6px 10px;
+  }
+
+  .toggle-btn {
+    padding: 4px 8px;
+  }
+}

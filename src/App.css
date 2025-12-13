@@ -16,13 +16,13 @@
   color: var(--sidebar-text-color);
   display: flex;
   flex-direction: column;
-  border-right: 2px solid var(--border-color);
+  border-right: 1px solid var(--border-color);
   overflow: hidden;
 }
 
 [data-theme="zombie-light"] .app-sidebar,
 [data-theme="zombie-dark"] .app-sidebar {
-  border-right: 2px solid var(--zombie-green);
+  border-right: 1px solid var(--border-color);
 }
 
 .content {

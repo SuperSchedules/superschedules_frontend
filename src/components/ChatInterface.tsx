@@ -518,6 +518,7 @@ export default function ChatInterface({
         value={inputMessage}
         onChange={setInputMessage}
         onSend={handleSendMessage}
+        onClear={clearChat}
         disabled={isLoading}
       />
     </div>

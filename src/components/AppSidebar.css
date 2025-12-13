@@ -54,20 +54,22 @@
 
 /* Header/Brand Section */
 .sidebar-header {
-  padding: 1.5rem 1rem;
-  border-bottom: 2px solid var(--border-color);
+  padding: 1rem;
+  border-bottom: 1px solid var(--border-color);
   background: var(--sidebar-bg-color);
+  min-height: 75px;
+  box-sizing: border-box;
 }
 
 [data-theme="zombie-light"] .sidebar-header,
 [data-theme="zombie-dark"] .sidebar-header {
-  border-bottom: 2px solid var(--zombie-green);
+  border-bottom: 1px solid var(--border-color);
   background: linear-gradient(135deg, var(--sidebar-bg-color) 0%, rgba(124, 252, 0, 0.1) 100%);
 }
 
 .sidebar-brand {
   display: flex;
-  flex-direction: column;
+  flex-direction: row;
   align-items: center;
   text-decoration: none;
   color: var(--sidebar-text-color);
@@ -75,9 +77,9 @@
 }
 
 .zombie-icon {
-  font-size: 3rem;
-  width: 4rem;
-  height: 4rem;
+  font-size: 2rem;
+  width: 2.5rem;
+  height: 2.5rem;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -91,7 +93,7 @@
 
 .brand-title {
   margin: 0;
-  font-size: 1.5rem;
+  font-size: 1.4rem;
   font-weight: 700;
   color: var(--sidebar-text-color);
   letter-spacing: 0.5px;
@@ -198,7 +200,6 @@
 /* Footer Section */
 .sidebar-footer {
   padding: 1rem;
-  border-top: 2px solid var(--border-color);
   background: var(--sidebar-bg-color);
   display: flex;
   flex-direction: column;
@@ -207,7 +208,6 @@
 
 [data-theme="zombie-light"] .sidebar-footer,
 [data-theme="zombie-dark"] .sidebar-footer {
-  border-top: 2px solid var(--zombie-green);
   background: linear-gradient(135deg, rgba(124, 252, 0, 0.05) 0%, var(--sidebar-bg-color) 100%);
 }
 

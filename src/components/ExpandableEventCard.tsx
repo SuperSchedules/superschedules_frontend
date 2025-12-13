@@ -1,6 +1,12 @@
 import { useState } from 'react';
 import { format, startOfMonth, endOfMonth, eachDayOfInterval, isSameDay, getDay } from 'date-fns';
 import type { Event } from '../types';
+import {
+  formatEventLocation,
+  formatVenueAddress,
+  getEventCoordinates,
+  getEventVenuePhone,
+} from '../utils';
 import './ExpandableEventCard.css';
 
 interface ExpandableEventCardProps {
@@ -8,19 +14,43 @@ interface ExpandableEventCardProps {
   onFindMoreLike: (event: Event) => void;
 }
 
+// Decode common HTML entities in text
+function decodeHtmlEntities(text: string): string {
+  const entities: Record<string, string> = {
+    '&nbsp;': ' ',
+    '&amp;': '&',
+    '&lt;': '<',
+    '&gt;': '>',
+    '&quot;': '"',
+    '&#39;': "'",
+    '&apos;': "'",
+  };
+  return text.replace(/&[a-z0-9#]+;/gi, (match) => entities[match] || match);
+}
+
 export default function ExpandableEventCard({ event, onFindMoreLike }: ExpandableEventCardProps) {
   const [isExpanded, setIsExpanded] = useState(false);
 
-  // Get location info from place or fallback to location string
-  const locationName = event.place?.name || event.location || 'Location TBA';
-  const locationAddress = event.place?.address || event.location || '';
-  const hasCoordinates = event.place?.latitude && event.place?.longitude;
+  // Get location info using helpers - prefers venue over legacy place/location
+  const locationName = formatEventLocation(event);
+  const coordinates = getEventCoordinates(event);
+  const hasCoordinates = coordinates !== null;
+  const venuePhone = getEventVenuePhone(event);
+
+  // Check if room_name is redundant (contains or equals venue name)
+  const venueName = event.venue?.name || event.place?.name;
+  const showRoomName = event.room_name && venueName &&
+    !event.room_name.toLowerCase().includes(venueName.toLowerCase());
+
+  // Get full address - prefer venue structured address over legacy
+  const fullAddress = event.venue
+    ? formatVenueAddress(event.venue)
+    : event.place?.address || event.location || '';
 
   // Generate OpenStreetMap embed URL
   const getMapEmbedUrl = () => {
-    if (hasCoordinates) {
-      const lat = event.place!.latitude!;
-      const lon = event.place!.longitude!;
+    if (hasCoordinates && coordinates) {
+      const { latitude: lat, longitude: lon } = coordinates;
       // Calculate bounding box (roughly 0.01 degrees = ~1km)
       const bbox = `${lon - 0.01},${lat - 0.01},${lon + 0.01},${lat + 0.01}`;
       return `https://www.openstreetmap.org/export/embed.html?bbox=${bbox}&layer=mapnik&marker=${lat},${lon}`;
@@ -32,21 +62,33 @@ export default function ExpandableEventCard({ event, onFindMoreLike }: Expandabl
 
   // Generate link to full map (for cases without coordinates, use search)
   const getMapLinkUrl = () => {
-    if (hasCoordinates) {
-      const lat = event.place!.latitude!;
-      const lon = event.place!.longitude!;
+    if (hasCoordinates && coordinates) {
+      const { latitude: lat, longitude: lon } = coordinates;
       return `https://www.openstreetmap.org/?mlat=${lat}&mlon=${lon}#map=15/${lat}/${lon}`;
-    } else if (locationAddress) {
-      return `https://www.openstreetmap.org/search?query=${encodeURIComponent(locationAddress)}`;
+    } else if (fullAddress) {
+      return `https://www.openstreetmap.org/search?query=${encodeURIComponent(fullAddress)}`;
     }
     return null;
   };
 
   const mapLinkUrl = getMapLinkUrl();
 
-  // Format date/time
-  const eventDate = event.start_time ? new Date(event.start_time) : event.start ? new Date(event.start) : null;
-  const formattedDate = eventDate ? format(eventDate, 'EEEE, MMMM d, yyyy') : 'Date TBA';
+  // Parse date/time - handle UTC strings that should be treated as local time
+  const parseEventDate = (dateStr: string | Date): Date => {
+    if (typeof dateStr === 'string') {
+      // If the string ends with Z (UTC), strip it to treat as local time
+      // This fixes timezone issues where backend sends local times tagged as UTC
+      const localStr = dateStr.endsWith('Z') ? dateStr.slice(0, -1) : dateStr;
+      return new Date(localStr);
+    }
+    return new Date(dateStr);
+  };
+
+  const eventDate = event.start_time
+    ? parseEventDate(event.start_time)
+    : event.start
+    ? parseEventDate(event.start)
+    : null;
   const formattedTime = eventDate ? format(eventDate, 'h:mm a') : '';
 
   // Generate mini calendar grid
@@ -79,13 +121,13 @@ export default function ExpandableEventCard({ event, onFindMoreLike }: Expandabl
             {eventDate && (
               <span className="quick-info-item">
                 <i className="bi bi-calendar3"></i>
-                {format(eventDate, 'MMM d')}
+                {format(eventDate, 'EEE MMM d')} {formattedTime && `at ${formattedTime}`}
               </span>
             )}
-            {locationName && (
+            {(fullAddress || locationName) && (
               <span className="quick-info-item">
                 <i className="bi bi-geo-alt"></i>
-                {locationName}
+                {fullAddress || locationName}
               </span>
             )}
           </div>
@@ -168,12 +210,16 @@ export default function ExpandableEventCard({ event, onFindMoreLike }: Expandabl
 
           {/* Location Details */}
           <div className="location-details">
-            <h5><i className="bi bi-geo-alt-fill"></i> Location</h5>
-            {event.place?.name && <div className="venue-name">{event.place.name}</div>}
-            {locationAddress && <div className="venue-address">{locationAddress}</div>}
-            {event.place?.telephone && (
+            {venueName && (
+              <div className="venue-name">{venueName}</div>
+            )}
+            {showRoomName && (
+              <div className="room-name">{event.room_name}</div>
+            )}
+            {fullAddress && <div className="venue-address">{fullAddress}</div>}
+            {venuePhone && (
               <div className="venue-phone">
-                <i className="bi bi-telephone"></i> {event.place.telephone}
+                <i className="bi bi-telephone"></i> {venuePhone}
               </div>
             )}
           </div>
@@ -181,8 +227,7 @@ export default function ExpandableEventCard({ event, onFindMoreLike }: Expandabl
           {/* Description */}
           {event.description && (
             <div className="event-description">
-              <h5>About</h5>
-              <p>{event.description}</p>
+              <p>{decodeHtmlEntities(event.description)}</p>
             </div>
           )}
 

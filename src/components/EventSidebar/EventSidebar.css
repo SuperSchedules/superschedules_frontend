@@ -68,7 +68,7 @@
 /* Sidebar container */
 .events-sidebar {
   background: var(--bg-color);
-  border-left: 2px solid var(--zombie-purple);
+  border-left: 1px solid var(--border-color);
   display: flex;
   flex-direction: column;
   overflow: hidden;
@@ -100,12 +100,14 @@
 
 /* Sidebar header */
 .events-sidebar-header {
-  padding: 1.25rem;
-  border-bottom: 2px solid var(--zombie-purple);
+  padding: 1rem;
+  border-bottom: 1px solid var(--border-color);
   display: flex;
   justify-content: space-between;
   align-items: center;
   background: var(--card-bg-color);
+  min-height: 75px;
+  box-sizing: border-box;
 }
 
 .events-sidebar-header h3 {
@@ -136,8 +138,9 @@
 /* Sidebar content */
 .events-sidebar-content {
   flex: 1;
-  overflow-y: auto;
-  padding: 16px;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
 }
 
 .events-count {

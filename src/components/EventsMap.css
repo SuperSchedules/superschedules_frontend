@@ -1,0 +1,80 @@
+.events-map-container {
+  width: 100%;
+  height: 100%;
+  min-height: 200px;
+  border-radius: 8px;
+  overflow: hidden;
+  border: 1px solid var(--bs-border-color);
+}
+
+.events-map {
+  width: 100%;
+  height: 100%;
+  min-height: 200px;
+}
+
+.events-map-empty {
+  width: 100%;
+  height: 100%;
+  min-height: 200px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: var(--bs-secondary-bg);
+  border-radius: 8px;
+  border: 1px solid var(--bs-border-color);
+  color: var(--bs-secondary-color);
+}
+
+.events-map-empty i {
+  font-size: 2rem;
+  margin-bottom: 8px;
+  opacity: 0.5;
+}
+
+.events-map-empty p {
+  margin: 0;
+  font-size: 0.875rem;
+}
+
+/* Popup styles */
+.map-popup {
+  font-family: inherit;
+  padding: 4px 0;
+}
+
+.map-popup strong {
+  display: block;
+  font-size: 0.9rem;
+  margin-bottom: 4px;
+  color: var(--bs-body-color);
+}
+
+.map-popup-location {
+  font-size: 0.8rem;
+  color: var(--bs-secondary-color);
+}
+
+/* Override Leaflet popup styles for better integration */
+.leaflet-popup-content-wrapper {
+  border-radius: 6px;
+}
+
+.leaflet-popup-content {
+  margin: 10px 12px;
+}
+
+/* Ensure map tiles load properly in dark mode */
+.leaflet-tile-pane {
+  opacity: 1;
+}
+
+/* Improve marker appearance */
+.leaflet-marker-icon {
+  transition: transform 0.15s ease;
+}
+
+.leaflet-marker-icon:hover {
+  transform: scale(1.1);
+}

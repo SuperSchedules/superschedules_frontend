@@ -30,7 +30,7 @@ export interface AuthContext {
 // Use Axios instance shape for authenticated HTTP client
 export type AuthFetch = import('axios').AxiosInstance;
 
-// Place types (Schema.org Place from Django)
+// Place types (Schema.org Place from Django) - legacy
 export interface Place {
   id?: number;
   name?: string;
@@ -43,13 +43,29 @@ export interface Place {
   updated_at?: string;
 }
 
+// Venue types (normalized venue data from backend)
+export interface Venue {
+  id: number;
+  name: string;
+  street_address: string;
+  city: string;
+  state: string;
+  postal_code: string;
+  latitude?: number;
+  longitude?: number;
+  telephone?: string;
+  url?: string;
+}
+
 // Event types
 export interface Event {
   id: string;
   title: string;
   description?: string;
-  location?: string;
-  place?: Place;
+  location?: string; // legacy fallback
+  room_name?: string | null; // room within a venue (e.g., "Children's Room")
+  venue?: Venue | null; // normalized venue data
+  place?: Place; // legacy Schema.org place
   start: Date | string;
   end?: Date | string;
   start_time?: string;

@@ -50,9 +50,7 @@ export default function SearchPreferencesBar({
       {isExpanded && (
         <div className="preferences-row-expanded">
           <div className="filter-group">
-            <label htmlFor="location-input">
-              📍 Location:
-            </label>
+            <label htmlFor="location-input">Location:</label>
             <input
               id="location-input"
               type="text"
@@ -64,9 +62,7 @@ export default function SearchPreferencesBar({
           </div>
 
           <div className="filter-group">
-            <label htmlFor="age-min">
-              👶 Ages:
-            </label>
+            <label htmlFor="age-min">Ages:</label>
             <div className="age-inputs">
               <input
                 id="age-min"
@@ -91,9 +87,7 @@ export default function SearchPreferencesBar({
           </div>
 
           <div className="filter-group">
-            <label htmlFor="max-price">
-              💰 Max Price: ${maxPrice}
-            </label>
+            <label htmlFor="max-price">Max Price: ${maxPrice}</label>
             <input
               id="max-price"
               type="range"
