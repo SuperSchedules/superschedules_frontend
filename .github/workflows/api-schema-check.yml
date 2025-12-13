@@ -87,6 +87,15 @@ jobs:
 
           python -c "
           import os
+          import sys
+          from unittest.mock import MagicMock
+
+          # Mock pgvector before Django imports it (not needed for schema generation)
+          pgvector_mock = MagicMock()
+          pgvector_mock.django.VectorField = MagicMock()
+          sys.modules['pgvector'] = pgvector_mock
+          sys.modules['pgvector.django'] = pgvector_mock.django
+
           os.environ['DJANGO_SETTINGS_MODULE'] = 'config.settings_ci'
 
           import django
