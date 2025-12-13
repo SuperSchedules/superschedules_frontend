@@ -42,7 +42,7 @@ jobs:
       - name: Install backend dependencies (minimal for schema generation)
         run: |
           cd backend
-          pip install django django-ninja djangorestframework djangorestframework-simplejwt django-cors-headers requests
+          pip install django django-ninja djangorestframework djangorestframework-simplejwt django-cors-headers requests httpx geopy boto3
 
       - name: Generate OpenAPI schema from backend
         run: |
@@ -90,11 +90,15 @@ jobs:
           import sys
           from unittest.mock import MagicMock
 
-          # Mock pgvector before Django imports it (not needed for schema generation)
+          # Mock heavy dependencies not needed for schema generation
           pgvector_mock = MagicMock()
           pgvector_mock.django.VectorField = MagicMock()
           sys.modules['pgvector'] = pgvector_mock
           sys.modules['pgvector.django'] = pgvector_mock.django
+
+          # Mock ML/LLM libraries (too heavy for CI, not needed for schema)
+          for mod in ['torch', 'torchvision', 'sentence_transformers', 'ollama']:
+              sys.modules[mod] = MagicMock()
 
           os.environ['DJANGO_SETTINGS_MODULE'] = 'config.settings_ci'
 
