@@ -1,0 +1,105 @@
+name: API Schema Check
+
+# Verifies frontend TypeScript types match the backend's OpenAPI schema.
+# If this check fails, it means the backend API changed and frontend types
+# need to be regenerated and committed.
+#
+# To fix a failure:
+#   1. Ensure backend is running locally (or use committed schema)
+#   2. Fetch new schema from backend:
+#      cd ../superschedules && ./.venv/bin/python -c "..." > ../superschedules_frontend/api-schema.json
+#   3. Regenerate types: pnpm api:generate
+#   4. Update any test mocks that use the old types (TypeScript will error)
+#   5. Commit the updated api-schema.json and api.generated.ts
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+    branches: [main, master]
+
+jobs:
+  check-api-schema:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout frontend
+        uses: actions/checkout@v4
+
+      - name: Checkout backend
+        uses: actions/checkout@v4
+        with:
+          repository: SuperSchedules/superschedules
+          path: backend
+          # Uses GITHUB_TOKEN by default, which works for public repos
+          # For private repos, add: token: ${{ secrets.BACKEND_REPO_PAT }}
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install backend dependencies (minimal for schema generation)
+        run: |
+          cd backend
+          pip install django django-ninja djangorestframework djangorestframework-simplejwt django-cors-headers
+
+      - name: Generate OpenAPI schema from backend
+        run: |
+          cd backend
+          python -c "
+          import os
+          os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'config.settings')
+
+          # Override database to SQLite for CI (no PostgreSQL needed for schema)
+          os.environ['DB_HOST'] = ''
+
+          import django
+          django.setup()
+
+          from config.urls import api
+          import json
+          schema = api.get_openapi_schema()
+          print(json.dumps(schema, indent=2, default=str))
+          " > ../api-schema.live.json
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'pnpm'
+
+      - name: Install frontend dependencies
+        run: pnpm install
+
+      - name: Fix and generate types from live schema
+        run: |
+          node scripts/fix-openapi-schema.mjs api-schema.live.json
+          pnpm exec openapi-typescript api-schema.live.json -o src/types/api.generated.live.ts
+
+      - name: Compare schemas
+        run: |
+          echo "Comparing committed types with live backend schema..."
+
+          # Compare the generated TypeScript files (ignoring timestamp comments)
+          if diff -q src/types/api.generated.ts src/types/api.generated.live.ts > /dev/null 2>&1; then
+            echo "✅ API types are in sync with backend schema"
+          else
+            echo "❌ API types are OUT OF SYNC with backend schema!"
+            echo ""
+            echo "The backend API has changed. To fix:"
+            echo "  1. Update api-schema.json from backend"
+            echo "  2. Run: pnpm api:generate"
+            echo "  3. Fix any TypeScript errors in test mocks"
+            echo "  4. Commit the changes"
+            echo ""
+            echo "Diff:"
+            diff src/types/api.generated.ts src/types/api.generated.live.ts || true
+            exit 1
+          fi
+
+      - name: Verify TypeScript compiles with new types
+        run: pnpm exec tsc --noEmit

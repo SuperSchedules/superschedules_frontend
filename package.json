@@ -8,7 +8,10 @@
     "build": "vite build",
     "lint": "eslint .",
     "preview": "vite preview",
-    "test": "vitest"
+    "test": "vitest",
+    "api:fix-schema": "node scripts/fix-openapi-schema.mjs api-schema.json",
+    "api:generate": "pnpm api:fix-schema && openapi-typescript api-schema.json -o src/types/api.generated.ts",
+    "api:check": "pnpm api:generate && git diff --exit-code src/types/api.generated.ts"
   },
   "dependencies": {
     "@types/date-fns": "^2.5.3",
@@ -40,6 +43,7 @@
     "eslint-plugin-react-refresh": "^0.4.20",
     "globals": "^16.3.0",
     "jsdom": "^26.1.0",
+    "openapi-typescript": "^7.10.1",
     "typescript-eslint": "^8.41.0",
     "vite": "^5.2.10",
     "vitest": "^3.2.4"
