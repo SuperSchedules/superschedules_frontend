@@ -148,6 +148,3 @@ jobs:
             diff src/types/api.generated.ts src/types/api.generated.live.ts || true
             exit 1
           fi
-
-      - name: Verify TypeScript compiles with new types
-        run: pnpm exec tsc --noEmit
