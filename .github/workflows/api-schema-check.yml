@@ -42,7 +42,7 @@ jobs:
       - name: Install backend dependencies (minimal for schema generation)
         run: |
           cd backend
-          pip install django django-ninja django-ninja-jwt djangorestframework djangorestframework-simplejwt django-cors-headers requests httpx geopy boto3
+          pip install django django-ninja django-ninja-jwt djangorestframework djangorestframework-simplejwt django-cors-headers django-grappelli requests httpx geopy boto3
 
       - name: Generate OpenAPI schema from backend
         run: |
