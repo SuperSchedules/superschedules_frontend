@@ -75,9 +75,8 @@ export default function CreateUser() {
       body: JSON.stringify({
         email,
         password,
-        firstName,
-        lastName,
-        zipCode,
+        first_name: firstName || null,
+        last_name: lastName || null,
         ...(turnstileToken && { turnstileToken }),
       }),
     });

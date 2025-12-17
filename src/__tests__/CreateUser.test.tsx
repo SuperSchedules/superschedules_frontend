@@ -69,9 +69,8 @@ describe('CreateUser page', () => {
         body: JSON.stringify({
           email: 'test@example.com',
           password: 'secret',
-          firstName: 'John',
-          lastName: 'Doe',
-          zipCode: '12345',
+          first_name: 'John',
+          last_name: 'Doe',
         }),
       }
     );
