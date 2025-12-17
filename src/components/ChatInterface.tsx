@@ -296,8 +296,8 @@ export default function ChatInterface({
       message,
       // Model A handler (this is where single model responses actually come through)
       (token: string, done: boolean, metadata?: any) => {
-        setMessages(prev => prev.map(msg => 
-          msg.id === streamingMessageId 
+        setMessages(prev => prev.map(msg =>
+          msg.id === streamingMessageId
             ? {
                 ...msg,
                 content: done ? msg.content : msg.content + token,
@@ -308,7 +308,7 @@ export default function ChatInterface({
               }
             : msg
         ));
-        
+
         if (done) {
           setIsLoading(false);
         }
@@ -333,9 +333,9 @@ export default function ChatInterface({
         setMessages(prev => [...prev, errorMessage]);
         setIsLoading(false);
       },
-      // Context
+      // Context - include all filter values from SearchPreferencesBar
       {
-        location: preferences.location || null,
+        location: location || preferences.location || null,
         preferences: {
           ...preferences,
           context_summary: getPreferencesContext()
@@ -346,6 +346,11 @@ export default function ChatInterface({
           from: dateFrom,
           to: dateTo
         },
+        age_range: {
+          min: ageMin,
+          max: ageMax
+        },
+        max_price: maxPrice,
         more_like_event_id: moreLikeEventId
       },
       // Single model mode
@@ -418,7 +423,7 @@ export default function ChatInterface({
   const handleRegularMessage = async (message: string, moreLikeEventId?: string | number) => {
     try {
       const response = await chatService.sendMessage(message, {
-        location: preferences.location || null,
+        location: location || preferences.location || null,
         preferences: {
           ...preferences,
           context_summary: getPreferencesContext()
@@ -430,6 +435,11 @@ export default function ChatInterface({
           from: dateFrom,
           to: dateTo
         },
+        age_range: {
+          min: ageMin,
+          max: ageMax
+        },
+        max_price: maxPrice,
         more_like_event_id: moreLikeEventId
       });
 
@@ -517,7 +527,7 @@ export default function ChatInterface({
       <ChatComposer
         value={inputMessage}
         onChange={setInputMessage}
-        onSend={handleSendMessage}
+        onSend={() => handleSendMessage()}
         onClear={clearChat}
         disabled={isLoading}
       />

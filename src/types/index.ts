@@ -134,6 +134,11 @@ export interface ChatContext {
     from: string;
     to: string;
   };
+  age_range?: {
+    min: number;
+    max: number;
+  };
+  max_price?: number;
   more_like_event_id?: string | number;
 }
 
