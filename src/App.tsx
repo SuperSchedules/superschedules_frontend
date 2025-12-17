@@ -6,6 +6,7 @@ import Home from './pages/Home';
 import Login from './pages/Login';
 import CreateUser from './pages/CreateUser';
 import VerifyAccount from './pages/VerifyAccount';
+import VerifyEmail from './pages/VerifyEmail';
 import ResetPassword from './pages/ResetPassword';
 import './App.css';
 
@@ -25,6 +26,7 @@ export default function App() {
                 <Route path="/login" element={<Login />} />
                 <Route path="/create-user" element={<CreateUser />} />
                 <Route path="/verify-account" element={<VerifyAccount />} />
+                <Route path="/verify-email" element={<VerifyEmail />} />
                 <Route path="/reset-password" element={<ResetPassword />} />
               </Routes>
             </main>

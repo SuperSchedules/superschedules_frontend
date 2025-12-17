@@ -17,6 +17,8 @@ export const AUTH_ENDPOINTS = {
   register: `${API_ROOT}/users/`,
   reset: `${API_ROOT}/reset/`,
   resetConfirm: `${API_ROOT}/reset/confirm/`,
+  verifyEmail: (token: string) => `${API_ROOT}/users/verify/${token}/`,
+  resendVerification: `${API_ROOT}/users/resend-verification/`,
 };
 
 export const EVENTS_ENDPOINTS = {

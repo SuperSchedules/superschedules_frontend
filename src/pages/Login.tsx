@@ -13,8 +13,10 @@ export default function Login() {
   const [resetInfo, setResetInfo] = useState('');
   const [loginLoading, setLoginLoading] = useState(false);
   const [resetLoading, setResetLoading] = useState(false);
+  const [verifyLoading, setVerifyLoading] = useState(false);
   const [loginAttempted, setLoginAttempted] = useState(false);
   const [resetAttempted, setResetAttempted] = useState(false);
+  const [verifyInfo, setVerifyInfo] = useState('');
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -56,6 +58,29 @@ export default function Login() {
       setResetInfo('Unable to process password reset.');
     } finally {
       setResetLoading(false);
+    }
+  };
+
+  const handleResendVerification = async () => {
+    if (!username) return;
+    setVerifyInfo('');
+    try {
+      setVerifyLoading(true);
+      const response = await fetch(AUTH_ENDPOINTS.resendVerification, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: username }),
+      });
+      if (response.ok) {
+        const data = await response.json();
+        setVerifyInfo(data.message || 'Verification email sent if account exists.');
+      } else {
+        setVerifyInfo('Unable to send verification email.');
+      }
+    } catch {
+      setVerifyInfo('Unable to send verification email.');
+    } finally {
+      setVerifyLoading(false);
     }
   };
 
@@ -107,6 +132,19 @@ export default function Login() {
         {loginError && (
           <div className="alert alert-danger" role="alert">
             {loginError}
+            <div className="mt-2">
+              <small>
+                Haven't verified your email?{' '}
+                <button
+                  type="button"
+                  className="btn btn-link btn-sm p-0"
+                  onClick={handleResendVerification}
+                  disabled={verifyLoading || !username}
+                >
+                  {verifyLoading ? 'Sending...' : 'Resend verification email'}
+                </button>
+              </small>
+            </div>
           </div>
         )}
         {resetInfo && (
@@ -114,12 +152,17 @@ export default function Login() {
             {resetInfo}
           </div>
         )}
+        {verifyInfo && (
+          <div className="alert alert-info" role="alert">
+            {verifyInfo}
+          </div>
+        )}
         <div className="d-flex justify-content-between mt-4">
           <button
             type="button"
             className="btn btn-secondary"
             onClick={() => navigate('/create-user')}
-            disabled={loginLoading || resetLoading}
+            disabled={loginLoading || resetLoading || verifyLoading}
           >
             Create account
           </button>
@@ -127,14 +170,14 @@ export default function Login() {
             type="button"
             className="btn btn-secondary"
             onClick={handleReset}
-            disabled={resetLoading || loginLoading}
+            disabled={resetLoading || loginLoading || verifyLoading}
           >
             {resetLoading ? 'Sending…' : 'I lost my password'}
           </button>
           <button
             type="submit"
             className="btn btn-primary"
-            disabled={loginLoading || resetLoading}
+            disabled={loginLoading || resetLoading || verifyLoading}
           >
             {loginLoading ? 'Logging in…' : 'Login'}
           </button>
