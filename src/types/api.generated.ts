@@ -55,6 +55,46 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/users/verify/{token}/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Verify Email
+         * @description Verify user's email address using the token from the verification email.
+         */
+        post: operations["api_views_verify_email"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/users/resend-verification/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Resend Verification Email
+         * @description Resend verification email to user.
+         */
+        post: operations["api_views_resend_verification_email"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/ping": {
         parameters: {
             query?: never;
@@ -406,6 +446,30 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/health": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Health
+         * @description Simple health check with build version info.
+         */
+        get: operations["api_health_health"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        /**
+         * Health
+         * @description Simple health check with build version info.
+         */
+        head: operations["api_health_health_head"];
+        patch?: never;
+        trace?: never;
+    };
     "/api/health/dashboard": {
         parameters: {
             query?: never;
@@ -459,6 +523,8 @@ export interface components {
             first_name?: string | null;
             /** Last Name */
             last_name?: string | null;
+            /** Turnstiletoken */
+            turnstileToken?: string | null;
         };
         /** PasswordResetRequestSchema */
         PasswordResetRequestSchema: {
@@ -476,6 +542,11 @@ export interface components {
             token: string;
             /** Password */
             password: string;
+        };
+        /** EmailVerificationResendSchema */
+        EmailVerificationResendSchema: {
+            /** Email */
+            email: string;
         };
         /** SourceSchema */
         SourceSchema: {
@@ -627,8 +698,6 @@ export interface components {
             title?: string | null;
             /** Description */
             description?: string | null;
-            /** Location */
-            location?: string | null;
             /** Start Time */
             start_time?: string | null;
             /** End Time */
@@ -762,11 +831,6 @@ export interface components {
             title: string;
             /** Description */
             description: string;
-            /**
-             * Location
-             * @default
-             */
-            location: string;
             /** Location Data */
             location_data?: {
                 [key: string]: unknown;
@@ -900,6 +964,61 @@ export interface operations {
             };
             /** @description Bad Request */
             400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MessageSchema"];
+                };
+            };
+        };
+    };
+    api_views_verify_email: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                token: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MessageSchema"];
+                };
+            };
+            /** @description Bad Request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MessageSchema"];
+                };
+            };
+        };
+    };
+    api_views_resend_verification_email: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["EmailVerificationResendSchema"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
                 headers: {
                     [name: string]: unknown;
                 };
@@ -1464,6 +1583,42 @@ export interface operations {
         };
     };
     api_health_ready_head: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    api_health_health: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    api_health_health_head: {
         parameters: {
             query?: never;
             header?: never;

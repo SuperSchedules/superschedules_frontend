@@ -96,6 +96,76 @@
         }
       }
     },
+    "/api/v1/users/verify/{token}/": {
+      "post": {
+        "operationId": "api_views_verify_email",
+        "summary": "Verify Email",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "token",
+            "schema": {
+              "title": "Token",
+              "type": "string"
+            },
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MessageSchema"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MessageSchema"
+                }
+              }
+            }
+          }
+        },
+        "description": "Verify user's email address using the token from the verification email."
+      }
+    },
+    "/api/v1/users/resend-verification/": {
+      "post": {
+        "operationId": "api_views_resend_verification_email",
+        "summary": "Resend Verification Email",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MessageSchema"
+                }
+              }
+            }
+          }
+        },
+        "description": "Resend verification email to user.",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/EmailVerificationResendSchema"
+              }
+            }
+          },
+          "required": true
+        }
+      }
+    },
     "/api/v1/ping": {
       "get": {
         "operationId": "api_views_ping",
@@ -920,6 +990,30 @@
         "description": "Kubernetes readiness probe - can the app serve traffic?"
       }
     },
+    "/api/health": {
+      "get": {
+        "operationId": "api_health_health",
+        "summary": "Health",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        },
+        "description": "Simple health check with build version info."
+      },
+      "head": {
+        "operationId": "api_health_health_head",
+        "summary": "Health",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        },
+        "description": "Simple health check with build version info."
+      }
+    },
     "/api/health/dashboard": {
       "get": {
         "operationId": "api_health_health_dashboard",
@@ -1050,6 +1144,17 @@
               }
             ],
             "title": "Last Name"
+          },
+          "turnstileToken": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Turnstiletoken"
           }
         },
         "required": [
@@ -1101,6 +1206,19 @@
           "password"
         ],
         "title": "PasswordResetConfirmSchema",
+        "type": "object"
+      },
+      "EmailVerificationResendSchema": {
+        "properties": {
+          "email": {
+            "title": "Email",
+            "type": "string"
+          }
+        },
+        "required": [
+          "email"
+        ],
+        "title": "EmailVerificationResendSchema",
         "type": "object"
       },
       "SourceSchema": {
@@ -1570,17 +1688,6 @@
             ],
             "title": "Description"
           },
-          "location": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Location"
-          },
           "start_time": {
             "anyOf": [
               {
@@ -2021,11 +2128,6 @@
           },
           "description": {
             "title": "Description",
-            "type": "string"
-          },
-          "location": {
-            "default": "",
-            "title": "Location",
             "type": "string"
           },
           "location_data": {
