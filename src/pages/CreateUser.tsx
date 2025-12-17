@@ -6,6 +6,9 @@ import type { CreateUserRequest } from '../types/api';
 // Turnstile site key - replace with your own from Cloudflare dashboard
 const TURNSTILE_SITE_KEY = import.meta.env.VITE_TURNSTILE_SITE_KEY || '';
 
+// Debug: log if Turnstile is configured
+console.log('[Turnstile] Site key configured:', !!TURNSTILE_SITE_KEY);
+
 export default function CreateUser() {
   const navigate = useNavigate();
   const [firstName, setFirstName] = useState('');
@@ -19,36 +22,56 @@ export default function CreateUser() {
 
   // Load Turnstile script and render widget
   useEffect(() => {
+    console.log('[Turnstile] useEffect running, key:', !!TURNSTILE_SITE_KEY, 'ref:', !!turnstileRef.current);
     if (!TURNSTILE_SITE_KEY || !turnstileRef.current) return;
 
     const scriptId = 'turnstile-script';
     if (!document.getElementById(scriptId)) {
+      console.log('[Turnstile] Loading script...');
       const script = document.createElement('script');
       script.id = scriptId;
       script.src = 'https://challenges.cloudflare.com/turnstile/v0/api.js';
       script.async = true;
       script.defer = true;
       document.head.appendChild(script);
+    } else {
+      console.log('[Turnstile] Script already in DOM');
     }
 
     // Render widget once script loads
     const renderWidget = () => {
+      console.log('[Turnstile] renderWidget called, turnstile:', !!window.turnstile, 'ref:', !!turnstileRef.current);
       if (window.turnstile && turnstileRef.current) {
+        console.log('[Turnstile] Rendering widget with sitekey:', TURNSTILE_SITE_KEY.substring(0, 10) + '...');
         window.turnstile.render(turnstileRef.current, {
           sitekey: TURNSTILE_SITE_KEY,
-          callback: (token: string) => setTurnstileToken(token),
-          'error-callback': () => setTurnstileToken(null),
-          'expired-callback': () => setTurnstileToken(null),
+          callback: (token: string) => {
+            console.log('[Turnstile] Success callback, token received:', token.substring(0, 20) + '...');
+            setTurnstileToken(token);
+          },
+          'error-callback': () => {
+            console.log('[Turnstile] Error callback');
+            setTurnstileToken(null);
+          },
+          'expired-callback': () => {
+            console.log('[Turnstile] Expired callback');
+            setTurnstileToken(null);
+          },
         });
       }
     };
 
     // Check if already loaded or wait for load
     if (window.turnstile) {
+      console.log('[Turnstile] Already loaded, rendering immediately');
       renderWidget();
     } else {
+      console.log('[Turnstile] Waiting for script load...');
       const script = document.getElementById(scriptId);
-      script?.addEventListener('load', renderWidget);
+      script?.addEventListener('load', () => {
+        console.log('[Turnstile] Script loaded');
+        renderWidget();
+      });
     }
   }, []);
 
@@ -76,6 +99,8 @@ export default function CreateUser() {
       last_name: lastName || null,
       turnstileToken: turnstileToken || undefined,
     };
+    console.log('[Turnstile] Submitting with token:', turnstileToken ? turnstileToken.substring(0, 20) + '...' : 'NONE');
+    console.log('[Turnstile] Request body:', JSON.stringify(requestBody));
 
     const response = await fetch(AUTH_ENDPOINTS.register, {
       method: 'POST',
