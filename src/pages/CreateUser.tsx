@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { AUTH_ENDPOINTS } from '../constants/api';
+import type { CreateUserRequest } from '../types/api';
 
 // Turnstile site key - replace with your own from Cloudflare dashboard
 const TURNSTILE_SITE_KEY = import.meta.env.VITE_TURNSTILE_SITE_KEY || '';
@@ -11,7 +12,6 @@ export default function CreateUser() {
   const [lastName, setLastName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [zipCode, setZipCode] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [honeypot, setHoneypot] = useState('');
   const [turnstileToken, setTurnstileToken] = useState<string | null>(null);
@@ -69,16 +69,18 @@ export default function CreateUser() {
       return;
     }
 
+    const requestBody: CreateUserRequest = {
+      email,
+      password,
+      first_name: firstName || null,
+      last_name: lastName || null,
+      turnstileToken: turnstileToken || undefined,
+    };
+
     const response = await fetch(AUTH_ENDPOINTS.register, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        email,
-        password,
-        first_name: firstName || null,
-        last_name: lastName || null,
-        ...(turnstileToken && { turnstileToken }),
-      }),
+      body: JSON.stringify(requestBody),
     });
     if (!response.ok) {
       setError('User creation failed');
@@ -160,23 +162,10 @@ export default function CreateUser() {
             />
           </label>
         </div>
-        <div className="mb-3">
-          <label className="form-label">
-            Zip code (optional)
-            <input
-              type="text"
-              className="form-control"
-              value={zipCode}
-              onChange={(e) => setZipCode(e.target.value)}
-              aria-label="zip code"
-              autoComplete="postal-code"
-            />
-          </label>
-        </div>
         <p>An email will be sent to verify your account.</p>
         <div className="alert alert-secondary" role="note">
           <small>
-            <strong>Note:</strong> Name and zip code are optional. If provided, your zip code will be used to help narrow down event searches to your local area by default.
+            <strong>Note:</strong> Name is optional and only used for personalization.
           </small>
         </div>
         <div className="alert alert-info" role="note">

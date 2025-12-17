@@ -27,7 +27,6 @@ describe('CreateUser page', () => {
     expect(screen.getByLabelText(/last name/i)).toBeInTheDocument();
     expect(screen.getByLabelText(/email/i)).toBeInTheDocument();
     expect(screen.getByLabelText(/^password$/i)).toBeInTheDocument();
-    expect(screen.getByLabelText(/zip code/i)).toBeInTheDocument();
     expect(
       screen.getByText(/an email will be sent to verify your account/i)
     ).toBeInTheDocument();
@@ -51,9 +50,6 @@ describe('CreateUser page', () => {
     });
     fireEvent.change(screen.getByLabelText(/^password$/i), {
       target: { value: 'secret' },
-    });
-    fireEvent.change(screen.getByLabelText(/zip code/i), {
-      target: { value: '12345' },
     });
     fireEvent.click(screen.getByRole('button', { name: /create account/i }));
 
