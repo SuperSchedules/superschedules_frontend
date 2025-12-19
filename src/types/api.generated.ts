@@ -398,6 +398,122 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/chat/sessions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List Chat Sessions
+         * @description List user's chat sessions, most recent first.
+         */
+        get: operations["api_views_list_chat_sessions"];
+        put?: never;
+        /**
+         * Create Chat Session
+         * @description Create a new chat session.
+         */
+        post: operations["api_views_create_chat_session"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/chat/sessions/{session_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Chat Session
+         * @description Get session with messages.
+         */
+        get: operations["api_views_get_chat_session"];
+        /**
+         * Update Chat Session
+         * @description Update session title or context.
+         */
+        put: operations["api_views_update_chat_session"];
+        post?: never;
+        /**
+         * Delete Chat Session
+         * @description Permanently delete a session and all its messages.
+         */
+        delete: operations["api_views_delete_chat_session"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/chat/sessions/{session_id}/archive": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Archive Chat Session
+         * @description Archive (soft-delete) a session.
+         */
+        post: operations["api_views_archive_chat_session"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/chat/sessions/{session_id}/messages": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Session Messages
+         * @description Get messages for a session with pagination.
+         */
+        get: operations["api_views_get_session_messages"];
+        put?: never;
+        /**
+         * Add Session Message
+         * @description Add a message to a session (used by chat service or for manual additions).
+         */
+        post: operations["api_views_add_session_message"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/chat/sessions/{session_id}/history": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Session History For Llm
+         * @description Get recent messages formatted for LLM context.
+         */
+        get: operations["api_views_get_session_history_for_llm"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/live": {
         parameters: {
             query?: never;
@@ -884,6 +1000,132 @@ export interface components {
         BatchRequestSchema: {
             /** Urls */
             urls: string[];
+        };
+        /** ChatSessionSchema */
+        ChatSessionSchema: {
+            /** Id */
+            id: number;
+            /** Title */
+            title: string;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /**
+             * Updated At
+             * Format: date-time
+             */
+            updated_at: string;
+            /** Is Active */
+            is_active: boolean;
+            /**
+             * Context
+             * @default {}
+             */
+            context: {
+                [key: string]: unknown;
+            };
+            /**
+             * Message Count
+             * @default 0
+             */
+            message_count: number;
+        };
+        /** CreateSessionSchema */
+        CreateSessionSchema: {
+            /**
+             * Title
+             * @default
+             */
+            title: string;
+            /**
+             * Context
+             * @default {}
+             */
+            context: {
+                [key: string]: unknown;
+            };
+        };
+        /** ChatMessageSchema */
+        ChatMessageSchema: {
+            /** Id */
+            id: number;
+            /** Role */
+            role: string;
+            /** Content */
+            content: string;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /**
+             * Metadata
+             * @default {}
+             */
+            metadata: {
+                [key: string]: unknown;
+            };
+        };
+        /** ChatSessionDetailSchema */
+        ChatSessionDetailSchema: {
+            /** Id */
+            id: number;
+            /** Title */
+            title: string;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /**
+             * Updated At
+             * Format: date-time
+             */
+            updated_at: string;
+            /** Is Active */
+            is_active: boolean;
+            /**
+             * Context
+             * @default {}
+             */
+            context: {
+                [key: string]: unknown;
+            };
+            /**
+             * Messages
+             * @default []
+             */
+            messages: components["schemas"]["ChatMessageSchema"][];
+        };
+        /** UpdateSessionSchema */
+        UpdateSessionSchema: {
+            /** Title */
+            title?: string | null;
+            /** Context */
+            context?: {
+                [key: string]: unknown;
+            } | null;
+        };
+        /** AddMessageSchema */
+        AddMessageSchema: {
+            /** Role */
+            role: string;
+            /** Content */
+            content: string;
+            /**
+             * Metadata
+             * @default {}
+             */
+            metadata: {
+                [key: string]: unknown;
+            };
+            /**
+             * Event Ids
+             * @default []
+             */
+            event_ids: number[];
         };
     };
     responses: never;
@@ -1518,6 +1760,214 @@ export interface operations {
                 "application/json": components["schemas"]["BatchRequestSchema"];
             };
         };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    api_views_list_chat_sessions: {
+        parameters: {
+            query?: {
+                active_only?: boolean;
+                limit?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ChatSessionSchema"][];
+                };
+            };
+        };
+    };
+    api_views_create_chat_session: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreateSessionSchema"];
+            };
+        };
+        responses: {
+            /** @description Created */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ChatSessionSchema"];
+                };
+            };
+        };
+    };
+    api_views_get_chat_session: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                session_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ChatSessionDetailSchema"];
+                };
+            };
+        };
+    };
+    api_views_update_chat_session: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                session_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdateSessionSchema"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ChatSessionSchema"];
+                };
+            };
+        };
+    };
+    api_views_delete_chat_session: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                session_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description No Content */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    api_views_archive_chat_session: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                session_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    api_views_get_session_messages: {
+        parameters: {
+            query?: {
+                limit?: number;
+                offset?: number;
+            };
+            header?: never;
+            path: {
+                session_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ChatMessageSchema"][];
+                };
+            };
+        };
+    };
+    api_views_add_session_message: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                session_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AddMessageSchema"];
+            };
+        };
+        responses: {
+            /** @description Created */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ChatMessageSchema"];
+                };
+            };
+        };
+    };
+    api_views_get_session_history_for_llm: {
+        parameters: {
+            query?: {
+                limit?: number;
+            };
+            header?: never;
+            path: {
+                session_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
         responses: {
             /** @description OK */
             200: {
