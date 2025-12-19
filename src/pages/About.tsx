@@ -44,6 +44,10 @@ export default function About({ isOpen, onClose }: AboutProps) {
           <p>
             This project is being developed rapidly using Claude Code CLI as the primary development assistant, with support from GitHub Copilot. The focus is on clarity, modularity, and realistic product evolution. It demonstrates how human + AI workflows can accelerate real software delivery from concept to production.
           </p>
+
+          <div className="version-info">
+            <small>Version: {__APP_VERSION__} ({__BUILD_DATE__})</small>
+          </div>
         </div>
       </div>
     </div>

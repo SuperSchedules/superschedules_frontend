@@ -83,3 +83,11 @@
 .close-btn:hover {
   opacity: 1;
 }
+
+.version-info {
+  margin-top: 2rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--border-color);
+  color: var(--muted-text-color, #888);
+  text-align: center;
+}
