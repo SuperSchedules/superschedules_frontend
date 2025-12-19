@@ -189,18 +189,38 @@ export function AuthProvider({ children }: AuthProviderProps) {
   };
 
   const getValidToken = async (): Promise<string> => {
-    if (!user) {
+    // Check localStorage first as fallback for race conditions after login
+    // (React state may not be updated yet when authFetch is called immediately)
+    const storedToken = localStorage.getItem('token');
+
+    if (!user && !storedToken) {
       throw new Error('Not authenticated');
     }
+
     const loginTime = Number(localStorage.getItem('loginTime'));
     if (loginTime && Date.now() - loginTime > ONE_DAY_MS) {
       logout();
       throw new Error('Session expired');
     }
-    if (user.tokenExp && user.tokenExp * 1000 < Date.now()) {
-      return refreshToken();
+
+    // If we have user state, use it for expiration checking
+    if (user) {
+      if (user.tokenExp && user.tokenExp * 1000 < Date.now()) {
+        return refreshToken();
+      }
+      return user.token;
     }
-    return user.token;
+
+    // Fallback to stored token (handles race condition after login)
+    if (storedToken) {
+      const tokenPayload = parseJwt(storedToken) || {};
+      if (tokenPayload.exp && tokenPayload.exp * 1000 < Date.now()) {
+        return refreshToken();
+      }
+      return storedToken;
+    }
+
+    throw new Error('Not authenticated');
   };
 
   // Axios instance with interceptors to handle auth and refresh flow
