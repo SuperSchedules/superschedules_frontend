@@ -140,6 +140,10 @@ export interface ChatContext {
   };
   max_price?: number;
   more_like_event_id?: string | number;
+  // Geo-distance and virtual event filtering
+  user_location?: { lat: number; lng: number } | null;
+  max_distance_miles?: number | null;
+  is_virtual?: boolean | null;
 }
 
 export interface ChatRequestPayload {

@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '../auth';
-import { useUserPreferences } from '../hooks/useUserPreferences';
+import { useUserPreferences, getMaxDistanceFromTransportation } from '../hooks/useUserPreferences';
+import { useGeolocation } from '../hooks/useGeolocation';
 import { ChatService } from '../services/chatService';
 import { FastAPIStreamingChatService, MockStreamingChatService } from '../services/streamingChatService';
 import type { ChatInterfaceProps, ChatMessage, Event } from '../types/index';
@@ -144,6 +145,7 @@ export default function ChatInterface({
   // Date helpers are handled within DateRangePicker
   // MessagesList will handle scroll management
   const { preferences, getPreferencesContext } = useUserPreferences();
+  const { location: userLocation } = useGeolocation();
   const [chatService] = useState(() => new ChatService(authFetch));
   const [streamingService] = useState(() => {
     // Try FastAPI first, fallback to mock for development
@@ -351,7 +353,11 @@ export default function ChatInterface({
           max: ageMax
         },
         max_price: maxPrice,
-        more_like_event_id: moreLikeEventId
+        more_like_event_id: moreLikeEventId,
+        // Geo-distance and virtual event filtering
+        user_location: userLocation,
+        max_distance_miles: getMaxDistanceFromTransportation(preferences.transportation),
+        is_virtual: null, // null = any (in-person, virtual, or mixed)
       },
       // Single model mode
       true

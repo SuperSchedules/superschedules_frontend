@@ -3,6 +3,18 @@ import type { UserPreferences } from '../types/index';
 
 const PREFERENCES_STORAGE_KEY = 'superschedules_user_preferences';
 
+/**
+ * Get max search distance in miles based on transportation preference
+ */
+export const getMaxDistanceFromTransportation = (transport?: string): number | null => {
+  switch (transport) {
+    case 'walking': return 2;
+    case 'public': return 15;
+    case 'driving': return 30;
+    default: return null; // 'any' or undefined = no limit
+  }
+};
+
 const getDefaultPreferences = (): UserPreferences => ({
   interests: [],
   preferredTimes: 'any',
