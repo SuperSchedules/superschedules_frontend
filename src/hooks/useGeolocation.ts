@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useCallback } from 'react';
 
 interface GeolocationState {
   location: { lat: number; lng: number } | null;
@@ -8,16 +8,17 @@ interface GeolocationState {
 
 /**
  * Hook to get user's browser geolocation
- * Requests permission on mount and caches the result
+ * Does NOT auto-request on mount (browsers require user gesture)
+ * Call requestLocation() in response to a user action (click, etc.)
  */
 export const useGeolocation = () => {
   const [state, setState] = useState<GeolocationState>({
     location: null,
-    loading: true,
+    loading: false,
     error: null,
   });
 
-  useEffect(() => {
+  const requestLocation = useCallback(() => {
     if (!('geolocation' in navigator)) {
       setState({
         location: null,
@@ -26,6 +27,8 @@ export const useGeolocation = () => {
       });
       return;
     }
+
+    setState(prev => ({ ...prev, loading: true }));
 
     navigator.geolocation.getCurrentPosition(
       (position) => {
@@ -44,16 +47,16 @@ export const useGeolocation = () => {
         setState({
           location: null,
           loading: false,
-          error: null, // Intentionally not exposing error to UI
+          error: null,
         });
       },
       {
-        enableHighAccuracy: false, // Lower accuracy for faster response
+        enableHighAccuracy: false,
         timeout: 10000,
-        maximumAge: 300000, // Cache for 5 minutes
+        maximumAge: 300000,
       }
     );
   }, []);
 
-  return state;
+  return { ...state, requestLocation };
 };
