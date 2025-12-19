@@ -223,67 +223,88 @@ export function AuthProvider({ children }: AuthProviderProps) {
     throw new Error('Not authenticated');
   };
 
-  // Axios instance with interceptors to handle auth and refresh flow
-  const authFetch = axios.create();
+  // Axios instance with interceptors - use refs to keep stable across renders
+  // and to allow interceptors to access current function versions
+  const authFetchRef = useRef<AxiosInstance | null>(null);
+  const interceptorsAddedRef = useRef(false);
+  const isRefreshingRef = useRef(false);
+  const failedQueueRef = useRef<QueueItem[]>([]);
 
-  let isRefreshing = false;
-  let failedQueue: QueueItem[] = [];
+  // Store current functions in refs so interceptors can access latest versions
+  const getValidTokenRef = useRef(getValidToken);
+  const refreshTokenRef = useRef(refreshToken);
+  const logoutRef = useRef(logout);
 
-  const processQueue = (error: any, token: string | null = null) => {
-    failedQueue.forEach((prom) => {
-      if (error) {
-        prom.reject(error);
-      } else {
-        prom.resolve(token!);
-      }
-    });
-    failedQueue = [];
-  };
+  // Update refs on each render
+  getValidTokenRef.current = getValidToken;
+  refreshTokenRef.current = refreshToken;
+  logoutRef.current = logout;
 
-  authFetch.interceptors.request.use(async (config: AxiosRequestConfig) => {
-    const token = await getValidToken();
-    config.headers = {
-      ...(config.headers || {}),
-      Authorization: `Bearer ${token}`,
+  if (!authFetchRef.current) {
+    authFetchRef.current = axios.create();
+  }
+  const authFetch = authFetchRef.current;
+
+  // Only add interceptors once
+  if (!interceptorsAddedRef.current) {
+    interceptorsAddedRef.current = true;
+
+    const processQueue = (error: any, token: string | null = null) => {
+      failedQueueRef.current.forEach((prom) => {
+        if (error) {
+          prom.reject(error);
+        } else {
+          prom.resolve(token!);
+        }
+      });
+      failedQueueRef.current = [];
     };
-    return config;
-  });
 
-  authFetch.interceptors.response.use(
-    (response: AxiosResponse) => response,
-    async (error: any) => {
-      const originalRequest = error.config;
-      if (error.response?.status === 401 && !originalRequest._retry) {
-        if (isRefreshing) {
-          return new Promise((resolve, reject) => {
-            failedQueue.push({ resolve, reject });
-          })
-            .then((token) => {
-              originalRequest.headers.Authorization = `Bearer ${token}`;
-              originalRequest._retry = true;
-              return authFetch(originalRequest);
+    authFetch.interceptors.request.use(async (config: AxiosRequestConfig) => {
+      const token = await getValidTokenRef.current();
+      config.headers = {
+        ...(config.headers || {}),
+        Authorization: `Bearer ${token}`,
+      };
+      return config;
+    });
+
+    authFetch.interceptors.response.use(
+      (response: AxiosResponse) => response,
+      async (error: any) => {
+        const originalRequest = error.config;
+        if (error.response?.status === 401 && !originalRequest._retry) {
+          if (isRefreshingRef.current) {
+            return new Promise((resolve, reject) => {
+              failedQueueRef.current.push({ resolve, reject });
             })
-            .catch(Promise.reject);
-        }
+              .then((token) => {
+                originalRequest.headers.Authorization = `Bearer ${token}`;
+                originalRequest._retry = true;
+                return authFetch(originalRequest);
+              })
+              .catch(Promise.reject);
+          }
 
-        originalRequest._retry = true;
-        isRefreshing = true;
-        try {
-          const newToken = await refreshToken();
-          processQueue(null, newToken);
-          originalRequest.headers.Authorization = `Bearer ${newToken}`;
-          return authFetch(originalRequest);
-        } catch (err) {
-          processQueue(err, null);
-          logout();
-          return Promise.reject(err);
-        } finally {
-          isRefreshing = false;
+          originalRequest._retry = true;
+          isRefreshingRef.current = true;
+          try {
+            const newToken = await refreshTokenRef.current();
+            processQueue(null, newToken);
+            originalRequest.headers.Authorization = `Bearer ${newToken}`;
+            return authFetch(originalRequest);
+          } catch (err) {
+            processQueue(err, null);
+            logoutRef.current();
+            return Promise.reject(err);
+          } finally {
+            isRefreshingRef.current = false;
+          }
         }
-      }
-      return Promise.reject(error);
-    },
-  );
+        return Promise.reject(error);
+      },
+    );
+  }
 
   return (
     <AuthContext.Provider
