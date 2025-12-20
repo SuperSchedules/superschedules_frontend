@@ -66,7 +66,7 @@ function parseJwt(token: string): JWTPayload | null {
   }
 }
 
-const ONE_DAY_MS = 24 * 60 * 60 * 1000;
+const THREE_DAYS_MS = 3 * 24 * 60 * 60 * 1000;
 
 export const AuthContext = createContext<AuthContextType | null>(null);
 
@@ -119,7 +119,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
       localStorage.setItem('loginTime', String(Date.now()));
     }
     const loginTime = Number(localStorage.getItem('loginTime'));
-    const remaining = ONE_DAY_MS - (Date.now() - loginTime);
+    const remaining = THREE_DAYS_MS - (Date.now() - loginTime);
     if (remaining <= 0) {
       logout();
     } else {
@@ -198,7 +198,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
     }
 
     const loginTime = Number(localStorage.getItem('loginTime'));
-    if (loginTime && Date.now() - loginTime > ONE_DAY_MS) {
+    if (loginTime && Date.now() - loginTime > THREE_DAYS_MS) {
       logout();
       throw new Error('Session expired');
     }
