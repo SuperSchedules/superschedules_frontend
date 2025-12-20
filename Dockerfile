@@ -3,10 +3,14 @@ FROM node:20 AS build
 # Build arguments for Vite environment variables
 ARG VITE_API_BASE_URL=https://api.eventzombie.com
 ARG VITE_TURNSTILE_SITE_KEY
+ARG VITE_APP_VERSION=unknown
+ARG VITE_BUILD_DATE=unknown
 
 # Make build args available to Vite during build
 ENV VITE_API_BASE_URL=$VITE_API_BASE_URL
 ENV VITE_TURNSTILE_SITE_KEY=$VITE_TURNSTILE_SITE_KEY
+ENV VITE_APP_VERSION=$VITE_APP_VERSION
+ENV VITE_BUILD_DATE=$VITE_BUILD_DATE
 
 # Enable corepack for pnpm support
 RUN corepack enable

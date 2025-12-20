@@ -2,8 +2,17 @@ import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 import { execSync } from 'child_process'
 
-// Get git info at build time
+// Get git info at build time, with env var fallback for Docker/CI builds
 const getGitInfo = () => {
+  // First try environment variables (set by Docker build args)
+  if (process.env.VITE_APP_VERSION && process.env.VITE_APP_VERSION !== 'unknown') {
+    return {
+      commitHash: process.env.VITE_APP_VERSION,
+      commitDate: process.env.VITE_BUILD_DATE || 'unknown'
+    }
+  }
+
+  // Fall back to git commands (works in local dev)
   try {
     const commitHash = execSync('git rev-parse --short HEAD').toString().trim()
     const commitDate = execSync('git log -1 --format=%cd --date=short').toString().trim()
