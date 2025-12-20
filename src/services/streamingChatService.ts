@@ -166,6 +166,29 @@ export class FastAPIStreamingChatService implements StreamingChatService {
     }
   }
 
+  private parseJwt(token: string): { exp?: number } | null {
+    try {
+      const base64Url = token.split('.')[1];
+      const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+      const jsonPayload = decodeURIComponent(
+        atob(base64)
+          .split('')
+          .map((c) => `%${`00${c.charCodeAt(0).toString(16)}`.slice(-2)}`)
+          .join(''),
+      );
+      return JSON.parse(jsonPayload);
+    } catch {
+      return null;
+    }
+  }
+
+  private isTokenExpired(token: string, bufferSeconds: number = 30): boolean {
+    const payload = this.parseJwt(token);
+    if (!payload?.exp) return false; // Can't determine, assume valid
+    // Add buffer to catch tokens about to expire
+    return payload.exp * 1000 < Date.now() + bufferSeconds * 1000;
+  }
+
   private async getAuthToken(): Promise<string> {
     // First, check if we have a token in localStorage
     const token = localStorage.getItem('token');
@@ -173,31 +196,58 @@ export class FastAPIStreamingChatService implements StreamingChatService {
       throw new Error('Not logged in - please log in to use chat');
     }
 
+    // Check if token is expired or about to expire (within 30 seconds)
+    const needsRefresh = this.isTokenExpired(token, 30);
+
+    if (!needsRefresh) {
+      // Token is still valid with buffer, use it directly
+      if (import.meta.env.DEV) console.log('Token still valid, using directly');
+      return token;
+    }
+
+    // Token is expired or about to expire, need to refresh
+    if (import.meta.env.DEV) console.log('Token expired or expiring soon, triggering refresh');
+
     try {
-      // Try to warm the auth system (refresh token if needed)
-      // The authFetch interceptor handles expiration automatically
+      // Make a request that will trigger the auth interceptor to refresh the token
       await this.authFetch.get(EVENTS_ENDPOINTS.list, {
         params: { limit: 1 },
         timeout: 5000
       });
 
-      // Return the (possibly refreshed) token
+      // Get the refreshed token from localStorage
       const refreshedToken = localStorage.getItem('token');
+      if (!refreshedToken) {
+        throw new Error('No token available after refresh');
+      }
+
+      // Verify the refreshed token is actually valid
+      if (this.isTokenExpired(refreshedToken, 5)) {
+        if (import.meta.env.DEV) console.error('Refreshed token is still expired');
+        throw new Error('Session expired - please log in again');
+      }
+
       if (import.meta.env.DEV) console.log('Retrieved fresh token for streaming');
-      return refreshedToken || token;
+      return refreshedToken;
     } catch (error: any) {
-      // Check if it's actually an auth error
+      // Check if it's an auth error (401/403)
       if (error.response?.status === 401 || error.response?.status === 403) {
         if (import.meta.env.DEV) console.error('Auth token expired or invalid:', error);
         throw new Error('Session expired - please log in again');
       }
 
-      // For other errors (network, 404, 500), just use the existing token
-      // The actual chat request will fail with a more specific error if needed
-      if (import.meta.env.DEV) {
-        console.warn('Token refresh check failed, using existing token:', error.message);
+      // For network errors, check if the existing token might still work
+      // (maybe the events endpoint is down but chat will work)
+      if (!this.isTokenExpired(token, 0)) {
+        if (import.meta.env.DEV) {
+          console.warn('Refresh request failed but token not expired, using existing:', error.message);
+        }
+        return token;
       }
-      return token;
+
+      // Token is expired and we couldn't refresh
+      if (import.meta.env.DEV) console.error('Cannot refresh expired token:', error);
+      throw new Error('Session expired - please log in again');
     }
   }
 }

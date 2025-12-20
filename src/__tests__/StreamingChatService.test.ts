@@ -1,6 +1,5 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { FastAPIStreamingChatService } from '../services/streamingChatService';
-import { EVENTS_ENDPOINTS } from '../constants/api';
 
 describe('FastAPIStreamingChatService', () => {
   const encoder = new TextEncoder();
@@ -8,7 +7,10 @@ describe('FastAPIStreamingChatService', () => {
 
   beforeEach(() => {
     originalFetch = global.fetch;
-    localStorage.setItem('token', 'test-token');
+    // Create a valid JWT token (exp = 1 hour from now)
+    const payload = btoa(JSON.stringify({ exp: Math.floor(Date.now() / 1000) + 3600 }));
+    const validToken = `eyJhbGciOiJIUzI1NiJ9.${payload}.signature`;
+    localStorage.setItem('token', validToken);
   });
 
   afterEach(() => {
@@ -18,7 +20,8 @@ describe('FastAPIStreamingChatService', () => {
   });
 
   it('streams SSE events and invokes token callbacks with metadata', async () => {
-    const authFetch: any = { get: vi.fn().mockResolvedValue({ data: [] }) };
+    // authFetch is not called when token is valid (skip warming request)
+    const authFetch: any = { get: vi.fn() };
 
     const sseText = [
       'data: {"model":"A","token":"Hello ","done":false}',
@@ -69,8 +72,8 @@ describe('FastAPIStreamingChatService', () => {
     });
     cleanup();
 
-    expect(authFetch.get).toHaveBeenCalled();
-    expect(authFetch.get.mock.calls[0][0]).toBe(EVENTS_ENDPOINTS.list);
+    // With valid token, authFetch.get is not called (no warming request needed)
+    expect(authFetch.get).not.toHaveBeenCalled();
     expect(tokens.join('')).toBe('Hello ');
     expect(finalMeta?.suggested_event_ids).toEqual([1, 2]);
     expect(finalMeta?.follow_up_questions).toEqual(['Q1']);
