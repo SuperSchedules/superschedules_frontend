@@ -167,26 +167,37 @@ export class FastAPIStreamingChatService implements StreamingChatService {
   }
 
   private async getAuthToken(): Promise<string> {
-    // Use the authFetch system to ensure we get a fresh, valid token
+    // First, check if we have a token in localStorage
+    const token = localStorage.getItem('token');
+    if (!token) {
+      throw new Error('Not logged in - please log in to use chat');
+    }
+
     try {
-      // Make a simple request that will trigger token refresh if needed
+      // Try to warm the auth system (refresh token if needed)
       // The authFetch interceptor handles expiration automatically
-      await this.authFetch.get(EVENTS_ENDPOINTS.list, { 
+      await this.authFetch.get(EVENTS_ENDPOINTS.list, {
         params: { limit: 1 },
-        timeout: 5000 
+        timeout: 5000
       });
-      
-      // After the successful authFetch call, the token in localStorage should be fresh
-      const token = localStorage.getItem('token');
-      if (!token) {
-        throw new Error('No authentication token available after refresh');
-      }
-      
+
+      // Return the (possibly refreshed) token
+      const refreshedToken = localStorage.getItem('token');
       if (import.meta.env.DEV) console.log('Retrieved fresh token for streaming');
+      return refreshedToken || token;
+    } catch (error: any) {
+      // Check if it's actually an auth error
+      if (error.response?.status === 401 || error.response?.status === 403) {
+        if (import.meta.env.DEV) console.error('Auth token expired or invalid:', error);
+        throw new Error('Session expired - please log in again');
+      }
+
+      // For other errors (network, 404, 500), just use the existing token
+      // The actual chat request will fail with a more specific error if needed
+      if (import.meta.env.DEV) {
+        console.warn('Token refresh check failed, using existing token:', error.message);
+      }
       return token;
-    } catch (error) {
-      if (import.meta.env.DEV) console.error('Failed to get/refresh token for streaming:', error);
-      throw new Error('Authentication failed - please refresh the page and try again');
     }
   }
 }
