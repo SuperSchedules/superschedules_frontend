@@ -43,7 +43,7 @@ export class LocationService {
 
       const response = await this.authFetch.get(url, { signal: options.signal });
 
-      const suggestions: LocationSuggestion[] = response.data.suggestions || response.data || [];
+      const suggestions: LocationSuggestion[] = response.data.results || response.data.suggestions || response.data || [];
       this.cache.set(cacheKey, suggestions);
 
       return { success: true, data: suggestions };
