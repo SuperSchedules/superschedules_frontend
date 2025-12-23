@@ -34,6 +34,11 @@ export const CHAT_ENDPOINTS = {
   suggestions: `${API_ROOT}/chat/suggestions/`,
 };
 
+export const LOCATION_ENDPOINTS = {
+  suggest: `${API_ROOT}/locations/suggest/`,
+  detail: (id: string | number) => `${API_ROOT}/locations/${id}/`,
+};
+
 // Streaming now uses /api/v1/chat/stream (same as other endpoints)
 export const STREAMING_API_BASE_URL = import.meta.env.VITE_STREAMING_API_BASE_URL
   || (import.meta.env.PROD ? API_BASE_URL : 'http://localhost:8002');

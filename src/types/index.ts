@@ -1,3 +1,12 @@
+// Location suggestion from autocomplete API
+export interface LocationSuggestion {
+  id: string | number;
+  label: string;           // "Newton, MA, United States"
+  lat?: number;
+  lng?: number;
+  country_code: string;    // "US"
+}
+
 // User preferences for event recommendations
 export interface UserPreferences {
   age?: number;

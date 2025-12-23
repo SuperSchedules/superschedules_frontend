@@ -4,7 +4,7 @@ import { useUserPreferences, getMaxDistanceFromTransportation } from '../hooks/u
 import { useGeolocation } from '../hooks/useGeolocation';
 import { ChatService } from '../services/chatService';
 import { FastAPIStreamingChatService, MockStreamingChatService } from '../services/streamingChatService';
-import type { ChatInterfaceProps, ChatMessage, Event } from '../types/index';
+import type { ChatInterfaceProps, ChatMessage, Event, LocationSuggestion } from '../types/index';
 import './ChatInterface.css';
 import SearchPreferencesBar from './SearchPreferencesBar';
 import ChatComposer from './ChatComposer';
@@ -138,7 +138,7 @@ export default function ChatInterface({
     return nextWeek.toISOString().split('T')[0];
   });
   // Additional filter states
-  const [location, setLocation] = useState<string>('');
+  const [location, setLocation] = useState<LocationSuggestion | null>(null);
   const [ageMin, setAgeMin] = useState<number>(0);
   const [ageMax, setAgeMax] = useState<number>(18);
   const [maxPrice, setMaxPrice] = useState<number>(100);
@@ -337,7 +337,7 @@ export default function ChatInterface({
       },
       // Context - include all filter values from SearchPreferencesBar
       {
-        location: location || preferences.location || null,
+        location: location?.label || preferences.location || null,
         preferences: {
           ...preferences,
           context_summary: getPreferencesContext()
@@ -429,7 +429,7 @@ export default function ChatInterface({
   const handleRegularMessage = async (message: string, moreLikeEventId?: string | number) => {
     try {
       const response = await chatService.sendMessage(message, {
-        location: location || preferences.location || null,
+        location: location?.label || preferences.location || null,
         preferences: {
           ...preferences,
           context_summary: getPreferencesContext()

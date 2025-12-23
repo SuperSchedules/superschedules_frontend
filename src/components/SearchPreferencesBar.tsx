@@ -1,13 +1,15 @@
 import { useState } from 'react';
 import DateRangePicker from './DateRangePicker';
+import LocationAutocomplete from './LocationAutocomplete';
+import type { LocationSuggestion } from '../types/index';
 import './SearchPreferencesBar.css';
 
 interface SearchPreferencesBarProps {
   dateFrom: string;
   dateTo: string;
   onDateChange: (range: { from: string; to: string }) => void;
-  location?: string;
-  onLocationChange?: (location: string) => void;
+  location?: LocationSuggestion | null;
+  onLocationChange?: (location: LocationSuggestion | null) => void;
   ageMin?: number;
   ageMax?: number;
   onAgeChange?: (min: number, max: number) => void;
@@ -19,7 +21,7 @@ export default function SearchPreferencesBar({
   dateFrom,
   dateTo,
   onDateChange,
-  location = '',
+  location = null,
   onLocationChange,
   ageMin = 0,
   ageMax = 18,
@@ -51,13 +53,11 @@ export default function SearchPreferencesBar({
         <div className="preferences-row-expanded">
           <div className="filter-group">
             <label htmlFor="location-input">Location:</label>
-            <input
+            <LocationAutocomplete
               id="location-input"
-              type="text"
               value={location}
-              onChange={(e) => onLocationChange?.(e.target.value)}
+              onChange={(loc) => onLocationChange?.(loc)}
               placeholder="City or town..."
-              className="filter-input"
             />
           </div>
 
