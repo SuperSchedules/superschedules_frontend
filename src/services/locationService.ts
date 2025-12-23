@@ -1,4 +1,5 @@
 import { LOCATION_ENDPOINTS } from '../constants/api';
+import { buildApiUrl, assertNoTrailingSlash } from '../utils/api';
 import type { AuthFetch, LocationSuggestion } from '../types/index';
 
 export interface LocationSuggestResponse {
@@ -32,14 +33,15 @@ export class LocationService {
     }
 
     try {
-      const params = new URLSearchParams({ q: query });
-      if (options.country) params.append('country', options.country);
-      if (options.limit) params.append('limit', options.limit.toString());
+      const url = buildApiUrl(LOCATION_ENDPOINTS.suggest, {
+        q: query,
+        country: options.country,
+        limit: options.limit,
+      });
 
-      const response = await this.authFetch.get(
-        `${LOCATION_ENDPOINTS.suggest}?${params.toString()}`,
-        { signal: options.signal }
-      );
+      assertNoTrailingSlash(url);
+
+      const response = await this.authFetch.get(url, { signal: options.signal });
 
       const suggestions: LocationSuggestion[] = response.data.suggestions || response.data || [];
       this.cache.set(cacheKey, suggestions);
@@ -58,7 +60,10 @@ export class LocationService {
 
   async getById(id: string | number): Promise<LocationDetailResponse> {
     try {
-      const response = await this.authFetch.get(LOCATION_ENDPOINTS.detail(id));
+      const url = LOCATION_ENDPOINTS.detail(id);
+      assertNoTrailingSlash(url);
+
+      const response = await this.authFetch.get(url);
       return { success: true, data: response.data };
     } catch (error) {
       return {

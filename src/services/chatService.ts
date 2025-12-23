@@ -1,5 +1,6 @@
 import { CHAT_ENDPOINTS, EVENTS_ENDPOINTS } from '../constants/api';
-import type { AuthFetch, ChatContext, ChatResponse, Event, EventsByIdsResponse } from '../types/index';
+import { buildApiUrl, buildApiUrlWithArrayParams, assertNoTrailingSlash } from '../utils/api';
+import type { AuthFetch, ChatContext, ChatResponse, Event } from '../types/index';
 
 export class ChatService {
   private authFetch: AuthFetch;
@@ -69,15 +70,15 @@ export class ChatService {
 
   async getSuggestions(query: string, filters: Record<string, any> = {}): Promise<{ success: boolean; data?: string[]; error?: string }> {
     try {
-      const params = new URLSearchParams({
+      const url = buildApiUrl(CHAT_ENDPOINTS.suggestions, {
         q: query,
         ...filters
       });
 
-      const response = await this.authFetch.get(
-        `${CHAT_ENDPOINTS.suggestions}?${params.toString()}`
-      );
-      
+      assertNoTrailingSlash(url);
+
+      const response = await this.authFetch.get(url);
+
       return {
         success: true,
         data: response.data.suggestions || []
@@ -127,12 +128,10 @@ export class ChatService {
       }
 
       // Make request to backend with correct integer IDs
-      const params = new URLSearchParams();
-      numericIds.forEach(id => params.append('ids', id.toString()));
-      
-      const response = await this.authFetch.get(
-        `${EVENTS_ENDPOINTS.list}?${params.toString()}`
-      );
+      const url = buildApiUrlWithArrayParams(EVENTS_ENDPOINTS.list, 'ids', numericIds);
+      assertNoTrailingSlash(url);
+
+      const response = await this.authFetch.get(url);
       
       // Process the response and ensure proper date formatting
       const events = response.data.map((event: any): Event => ({

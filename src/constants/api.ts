@@ -1,3 +1,14 @@
+/**
+ * API endpoint constants.
+ *
+ * CONVENTION: NO trailing slashes on endpoints.
+ * This prevents 404s from URLs like /api/v1/locations/suggest/?q=foo
+ *
+ * Use the helpers from utils/api.ts to build URLs with query params:
+ *   import { buildApiUrl } from '../utils/api';
+ *   buildApiUrl(LOCATION_ENDPOINTS.suggest, { q: 'newton', limit: 8 })
+ */
+
 const DEV_API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000';
 // In production, default to hosted API (can be overridden via env)
 const PROD_API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://api.eventzombie.com';
@@ -9,34 +20,35 @@ export const API_BASE_URL = import.meta.env.PROD
 // Allow easy switching between API versions via environment variable
 export const API_VERSION = import.meta.env.VITE_API_VERSION || 'v1';
 
+// No trailing slash on API_ROOT
 const API_ROOT = `${API_BASE_URL}/api/${API_VERSION}`;
 
 export const AUTH_ENDPOINTS = {
-  login: `${API_ROOT}/token/`,
-  refresh: `${API_ROOT}/token/refresh/`,
-  register: `${API_ROOT}/users/`,
-  reset: `${API_ROOT}/reset/`,
-  resetConfirm: `${API_ROOT}/reset/confirm/`,
-  verifyEmail: (token: string) => `${API_ROOT}/users/verify/${token}/`,
-  resendVerification: `${API_ROOT}/users/resend-verification/`,
+  login: `${API_ROOT}/token`,
+  refresh: `${API_ROOT}/token/refresh`,
+  register: `${API_ROOT}/users`,
+  reset: `${API_ROOT}/reset`,
+  resetConfirm: `${API_ROOT}/reset/confirm`,
+  verifyEmail: (token: string) => `${API_ROOT}/users/verify/${token}`,
+  resendVerification: `${API_ROOT}/users/resend-verification`,
 };
 
 export const EVENTS_ENDPOINTS = {
-  list: `${API_ROOT}/events/`,
+  list: `${API_ROOT}/events`,
 };
 
 export const SOURCES_ENDPOINTS = {
-  list: `${API_ROOT}/sources/`,
+  list: `${API_ROOT}/sources`,
 };
 
 export const CHAT_ENDPOINTS = {
-  message: `${API_ROOT}/chat/`,
-  suggestions: `${API_ROOT}/chat/suggestions/`,
+  message: `${API_ROOT}/chat`,
+  suggestions: `${API_ROOT}/chat/suggestions`,
 };
 
 export const LOCATION_ENDPOINTS = {
-  suggest: `${API_ROOT}/locations/suggest/`,
-  detail: (id: string | number) => `${API_ROOT}/locations/${id}/`,
+  suggest: `${API_ROOT}/locations/suggest`,
+  detail: (id: string | number) => `${API_ROOT}/locations/${id}`,
 };
 
 // Streaming now uses /api/v1/chat/stream (same as other endpoints)
