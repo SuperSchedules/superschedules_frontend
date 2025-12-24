@@ -158,7 +158,14 @@
 /* Mobile adjustments */
 @media (max-width: 768px) {
   .location-suggestions {
+    position: fixed;
+    left: 0.5rem;
+    right: 0.5rem;
     max-height: 200px;
+    border-radius: 6px;
+    border-top: 1px solid var(--border-color);
+    overscroll-behavior: contain;
+    -webkit-overflow-scrolling: touch;
   }
 
   .location-suggestion {

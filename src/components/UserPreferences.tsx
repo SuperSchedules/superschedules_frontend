@@ -47,14 +47,6 @@ export default function UserPreferences({ isOpen, onClose }: UserPreferencesProp
     updatePreferences({ accessibility: updated });
   };
 
-  const toggleBudgetRange = (range: 'free' | 'low' | 'medium' | 'high') => {
-    const budgetRange = preferences.budgetRange || [];
-    const updated = budgetRange.includes(range)
-      ? budgetRange.filter(r => r !== range)
-      : [...budgetRange, range];
-    updatePreferences({ budgetRange: updated });
-  };
-
   return (
     <div className="preferences-overlay" onClick={handleClose}>
       <div className="preferences-modal" onClick={(e) => e.stopPropagation()}>
@@ -94,20 +86,6 @@ export default function UserPreferences({ isOpen, onClose }: UserPreferencesProp
           <div className="pref-section-card">
             <h4 className="section-title">Basic Information</h4>
             <div className="section-content">
-              <div className="form-row">
-                <label htmlFor="pref-location" className="row-label">Location</label>
-                <div className="row-control">
-                  <input
-                    id="pref-location"
-                    type="text"
-                    value={preferences.location || ''}
-                    onChange={(e) => updatePreferences({ location: e.target.value })}
-                    placeholder="City or town"
-                    className="form-input"
-                  />
-                </div>
-              </div>
-
               <div className="form-row">
                 <label htmlFor="pref-age" className="row-label">Age</label>
                 <div className="row-control">
@@ -150,32 +128,6 @@ export default function UserPreferences({ isOpen, onClose }: UserPreferencesProp
           <div className="pref-section-card">
             <h4 className="section-title">Event Preferences</h4>
             <div className="section-content">
-              <div className="form-row">
-                <label className="row-label">Budget Range</label>
-                <div className="row-control">
-                  <div className="button-group">
-                    {[
-                      { value: 'free', label: 'Free ($0)' },
-                      { value: 'low', label: 'Low ($1-25)' },
-                      { value: 'medium', label: 'Medium ($25-75)' },
-                      { value: 'high', label: 'High ($75+)' }
-                    ].map(({ value, label }) => {
-                      const isSelected = (preferences.budgetRange || []).includes(value as any);
-                      return (
-                        <button
-                          key={value}
-                          type="button"
-                          className={`option-btn ${isSelected ? 'selected' : ''}`}
-                          onClick={() => toggleBudgetRange(value as 'free' | 'low' | 'medium' | 'high')}
-                        >
-                          {label}
-                        </button>
-                      );
-                    })}
-                  </div>
-                </div>
-              </div>
-
               <div className="form-row">
                 <label htmlFor="pref-time" className="row-label">Preferred Time</label>
                 <div className="row-control">

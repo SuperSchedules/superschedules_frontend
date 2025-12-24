@@ -11,9 +11,7 @@ export interface LocationSuggestion {
 export interface UserPreferences {
   age?: number;
   interests?: string[];
-  location?: string;
   familySize?: number;
-  budgetRange?: ('free' | 'low' | 'medium' | 'high')[];
   accessibility?: string[];
   preferredDays?: string[];
   preferredTimes?: 'morning' | 'afternoon' | 'evening' | 'any';

@@ -72,13 +72,17 @@ export function useLocationAutocomplete(options: UseLocationAutocompleteOptions 
       });
 
       if (result.success && result.data) {
-        setState(prev => ({
-          ...prev,
-          suggestions: result.data!,
-          isLoading: false,
-          isOpen: result.data!.length > 0,
-          highlightedIndex: -1,
-        }));
+        setState(prev => {
+          // Keep previous suggestions if new search returns nothing (typo tolerance)
+          const hasNewResults = result.data!.length > 0;
+          return {
+            ...prev,
+            suggestions: hasNewResults ? result.data! : prev.suggestions,
+            isLoading: false,
+            isOpen: prev.suggestions.length > 0 || hasNewResults,
+            highlightedIndex: -1,
+          };
+        });
       } else if (result.error !== 'Request canceled') {
         setState(prev => ({
           ...prev,

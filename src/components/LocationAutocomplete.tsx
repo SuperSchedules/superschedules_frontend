@@ -1,7 +1,15 @@
-import { useId, useRef, useEffect, useState } from 'react';
+import { useId, useRef, useEffect, useState, useCallback } from 'react';
 import { useLocationAutocomplete } from '../hooks/useLocationAutocomplete';
 import type { LocationSuggestion } from '../types/index';
 import './LocationAutocomplete.css';
+
+// Strip "town", "CDP", "city" suffixes and abbreviate country for cleaner display
+function formatDisplayLabel(label: string): string {
+  return label
+    .replace(/\s+(town|CDP|city),/gi, ',')
+    .replace(/\s+(town|CDP|city)$/gi, '')
+    .replace(/,\s*United States$/i, ', USA');
+}
 
 interface LocationAutocompleteProps {
   value: LocationSuggestion | null;
@@ -24,10 +32,19 @@ export default function LocationAutocomplete({
   const inputId = externalId || `location-input-${generatedId}`;
   const listboxId = `${inputId}-listbox`;
 
-  const [inputValue, setInputValue] = useState<string>(value?.label || '');
+  const [inputValue, setInputValue] = useState<string>(value ? formatDisplayLabel(value.label) : '');
   const [validationMessage, setValidationMessage] = useState<string>('');
+  const [dropdownTop, setDropdownTop] = useState<number | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const listboxRef = useRef<HTMLUListElement>(null);
+  const hasSelectionRef = useRef<boolean>(!!value);
+
+  const updateDropdownPosition = useCallback(() => {
+    if (inputRef.current) {
+      const rect = inputRef.current.getBoundingClientRect();
+      setDropdownTop(rect.bottom);
+    }
+  }, []);
 
   const {
     suggestions,
@@ -46,7 +63,8 @@ export default function LocationAutocomplete({
   } = useLocationAutocomplete({ debounceMs: 250, minChars: 2, maxResults: 8 });
 
   useEffect(() => {
-    setInputValue(value?.label || '');
+    setInputValue(value ? formatDisplayLabel(value.label) : '');
+    hasSelectionRef.current = !!value;
     setValidationMessage('');
   }, [value]);
 
@@ -62,7 +80,9 @@ export default function LocationAutocomplete({
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const newValue = e.target.value;
     setInputValue(newValue);
+    hasSelectionRef.current = false;
     setValidationMessage('');
+    updateDropdownPosition();
 
     if (newValue.trim()) {
       search(newValue);
@@ -73,11 +93,11 @@ export default function LocationAutocomplete({
   };
 
   const handleSelect = (suggestion: LocationSuggestion) => {
-    setInputValue(suggestion.label);
+    setInputValue(formatDisplayLabel(suggestion.label));
+    hasSelectionRef.current = true;
     setValidationMessage('');
     onChange(suggestion);
     close();
-    inputRef.current?.focus();
   };
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
@@ -116,13 +136,14 @@ export default function LocationAutocomplete({
     setTimeout(() => {
       close();
 
-      if (inputValue.trim() && !value) {
+      if (inputRef.current?.value.trim() && !hasSelectionRef.current) {
         setValidationMessage('Select a location from the list');
       }
     }, 200);
   };
 
   const handleFocus = () => {
+    updateDropdownPosition();
     if (suggestions.length > 0) {
       open();
     }
@@ -130,6 +151,7 @@ export default function LocationAutocomplete({
 
   const handleClear = () => {
     setInputValue('');
+    hasSelectionRef.current = false;
     setValidationMessage('');
     onChange(null);
     clearSuggestions();
@@ -204,6 +226,7 @@ export default function LocationAutocomplete({
           role="listbox"
           aria-label="Location suggestions"
           className="location-suggestions"
+          style={dropdownTop !== null ? { top: dropdownTop } : undefined}
         >
           {error ? (
             <li className="location-error-item" role="status">
@@ -231,7 +254,7 @@ export default function LocationAutocomplete({
                 onClick={() => handleSelect(suggestion)}
               >
                 <i className="bi bi-geo-alt" aria-hidden="true"></i>
-                <span>{suggestion.label}</span>
+                <span>{formatDisplayLabel(suggestion.label)}</span>
               </li>
             ))
           )}

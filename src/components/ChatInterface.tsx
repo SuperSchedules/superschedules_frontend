@@ -337,7 +337,7 @@ export default function ChatInterface({
       },
       // Context - include all filter values from SearchPreferencesBar
       {
-        location: location?.label || preferences.location || null,
+        location: location?.label || null,
         preferences: {
           ...preferences,
           context_summary: getPreferencesContext()
