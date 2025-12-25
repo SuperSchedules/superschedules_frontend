@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { format, startOfMonth, endOfMonth, eachDayOfInterval, isSameDay, getDay } from 'date-fns';
 import type { Event } from '../types';
 import {
@@ -6,6 +6,9 @@ import {
   formatVenueAddress,
   getEventCoordinates,
   getEventVenuePhone,
+  generateGoogleCalendarUrl,
+  generateOutlookCalendarUrl,
+  downloadIcsFile,
 } from '../utils';
 import './ExpandableEventCard.css';
 
@@ -30,6 +33,21 @@ function decodeHtmlEntities(text: string): string {
 
 export default function ExpandableEventCard({ event, onFindMoreLike }: ExpandableEventCardProps) {
   const [isExpanded, setIsExpanded] = useState(false);
+  const [calendarMenuOpen, setCalendarMenuOpen] = useState(false);
+  const calendarMenuRef = useRef<HTMLDivElement>(null);
+
+  // Close calendar menu when clicking outside
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (calendarMenuRef.current && !calendarMenuRef.current.contains(event.target as Node)) {
+        setCalendarMenuOpen(false);
+      }
+    }
+    if (calendarMenuOpen) {
+      document.addEventListener('mousedown', handleClickOutside);
+      return () => document.removeEventListener('mousedown', handleClickOutside);
+    }
+  }, [calendarMenuOpen]);
 
   // Get location info using helpers - prefers venue over legacy place/location
   const locationName = formatEventLocation(event);
@@ -300,6 +318,63 @@ export default function ExpandableEventCard({ event, onFindMoreLike }: Expandabl
                 View Details
               </a>
             )}
+            <div className="calendar-dropdown" ref={calendarMenuRef}>
+              <button
+                className="btn-add-calendar"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setCalendarMenuOpen(!calendarMenuOpen);
+                }}
+              >
+                <i className="bi bi-calendar-plus"></i>
+                Add to Calendar
+                <i className={`bi bi-chevron-${calendarMenuOpen ? 'up' : 'down'} chevron-icon`}></i>
+              </button>
+              {calendarMenuOpen && (
+                <ul className="calendar-menu">
+                  <li>
+                    <a
+                      href={generateGoogleCalendarUrl(event)}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setCalendarMenuOpen(false);
+                      }}
+                    >
+                      <i className="bi bi-google"></i>
+                      Google Calendar
+                    </a>
+                  </li>
+                  <li>
+                    <a
+                      href={generateOutlookCalendarUrl(event)}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setCalendarMenuOpen(false);
+                      }}
+                    >
+                      <i className="bi bi-microsoft"></i>
+                      Outlook
+                    </a>
+                  </li>
+                  <li>
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        downloadIcsFile(event);
+                        setCalendarMenuOpen(false);
+                      }}
+                    >
+                      <i className="bi bi-download"></i>
+                      Download .ics
+                    </button>
+                  </li>
+                </ul>
+              )}
+            </div>
           </div>
         </div>
       )}

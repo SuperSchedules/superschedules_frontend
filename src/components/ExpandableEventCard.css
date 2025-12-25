@@ -401,6 +401,85 @@
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
+/* Calendar Dropdown */
+.calendar-dropdown {
+  position: relative;
+  flex: 1;
+  min-width: 120px;
+}
+
+.btn-add-calendar {
+  width: 100%;
+  padding: 8px 12px;
+  border-radius: 6px;
+  font-size: 0.8rem;
+  font-weight: 500;
+  text-decoration: none;
+  text-align: center;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  transition: all 0.2s ease;
+  cursor: pointer;
+  background: #28a745;
+  color: white;
+  border: none;
+}
+
+.btn-add-calendar:hover {
+  background: #218838;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.btn-add-calendar .chevron-icon {
+  font-size: 0.7rem;
+  margin-left: 2px;
+}
+
+.calendar-menu {
+  position: absolute;
+  bottom: 100%;
+  left: 0;
+  right: 0;
+  margin-bottom: 4px;
+  background: white;
+  border: 1px solid #dee2e6;
+  border-radius: 6px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  list-style: none;
+  padding: 4px 0;
+  z-index: 100;
+}
+
+.calendar-menu li a,
+.calendar-menu li button {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 8px 12px;
+  font-size: 0.85rem;
+  color: #212529;
+  text-decoration: none;
+  background: none;
+  border: none;
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+
+.calendar-menu li a:hover,
+.calendar-menu li button:hover {
+  background: #f8f9fa;
+}
+
+.calendar-menu li i {
+  font-size: 1rem;
+  width: 1.2rem;
+  text-align: center;
+}
+
 /* Dark mode adjustments */
 @media (prefers-color-scheme: dark) {
   .btn-view-details {
@@ -420,5 +499,20 @@
   .badge-organizer {
     background: #533f03;
     color: #ffeaa7;
+  }
+
+  .calendar-menu {
+    background: #2d2d2d;
+    border-color: #444;
+  }
+
+  .calendar-menu li a,
+  .calendar-menu li button {
+    color: #e9ecef;
+  }
+
+  .calendar-menu li a:hover,
+  .calendar-menu li button:hover {
+    background: #3d3d3d;
   }
 }

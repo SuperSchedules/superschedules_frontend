@@ -8,3 +8,10 @@ export {
   getEventVenuePhone,
   eventHasCoordinates,
 } from './eventLocation';
+
+export {
+  generateGoogleCalendarUrl,
+  generateOutlookCalendarUrl,
+  generateIcsContent,
+  downloadIcsFile,
+} from './calendar';
