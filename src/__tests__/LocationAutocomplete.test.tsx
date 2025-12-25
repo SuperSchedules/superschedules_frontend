@@ -67,7 +67,7 @@ describe('LocationAutocomplete', () => {
   it('renders with value', () => {
     const value = createMockLocationSuggestion();
     render(<LocationAutocomplete value={value} onChange={vi.fn()} />);
-    expect(screen.getByRole('combobox')).toHaveValue('Newton, MA, United States');
+    expect(screen.getByRole('combobox')).toHaveValue('Newton, MA, USA');
   });
 
   it('shows dropdown when isOpen is true with suggestions', () => {
@@ -80,9 +80,9 @@ describe('LocationAutocomplete', () => {
     render(<LocationAutocomplete value={null} onChange={vi.fn()} />);
 
     expect(screen.getByRole('listbox')).toBeInTheDocument();
-    expect(screen.getByText('Newton, MA, United States')).toBeInTheDocument();
-    expect(screen.getByText('New York, NY, United States')).toBeInTheDocument();
-    expect(screen.getByText('Newark, NJ, United States')).toBeInTheDocument();
+    expect(screen.getByText('Newton, MA, USA')).toBeInTheDocument();
+    expect(screen.getByText('New York, NY, USA')).toBeInTheDocument();
+    expect(screen.getByText('Newark, NJ, USA')).toBeInTheDocument();
   });
 
   it('calls onChange when suggestion is clicked', () => {
@@ -95,10 +95,10 @@ describe('LocationAutocomplete', () => {
     const onChange = vi.fn();
     render(<LocationAutocomplete value={null} onChange={onChange} />);
 
-    fireEvent.click(screen.getByText('Newton, MA, United States'));
+    fireEvent.click(screen.getByText('Newton, MA, USA'));
 
     expect(onChange).toHaveBeenCalledWith(
-      expect.objectContaining({ label: 'Newton, MA, United States' })
+      expect.objectContaining({ label: 'Newton, MA, USA' })
     );
   });
 

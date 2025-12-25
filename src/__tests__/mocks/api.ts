@@ -115,7 +115,7 @@ export function createMockLocationSuggestion(
 ): LocationSuggestion {
   return {
     id: 1,
-    label: 'Newton, MA, United States',
+    label: 'Newton, MA, USA',
     lat: 42.337,
     lng: -71.209,
     country_code: 'US',
@@ -128,11 +128,11 @@ export function createMockLocationSuggestion(
  */
 export function createMockLocationSuggestions(count: number = 5): LocationSuggestion[] {
   const cities = [
-    { id: 1, label: 'Newton, MA, United States', lat: 42.337, lng: -71.209 },
-    { id: 2, label: 'New York, NY, United States', lat: 40.712, lng: -74.006 },
-    { id: 3, label: 'Newark, NJ, United States', lat: 40.735, lng: -74.172 },
-    { id: 4, label: 'Newport, RI, United States', lat: 41.490, lng: -71.312 },
-    { id: 5, label: 'Newbury, MA, United States', lat: 42.772, lng: -70.854 },
+    { id: 1, label: 'Newton, MA, USA', lat: 42.337, lng: -71.209 },
+    { id: 2, label: 'New York, NY, USA', lat: 40.712, lng: -74.006 },
+    { id: 3, label: 'Newark, NJ, USA', lat: 40.735, lng: -74.172 },
+    { id: 4, label: 'Newport, RI, USA', lat: 41.490, lng: -71.312 },
+    { id: 5, label: 'Newbury, MA, USA', lat: 42.772, lng: -70.854 },
   ];
 
   return cities.slice(0, count).map((city) => ({
