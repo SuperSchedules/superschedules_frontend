@@ -5,10 +5,13 @@ import { useGeolocation } from '../hooks/useGeolocation';
 import { ChatService } from '../services/chatService';
 import { FastAPIStreamingChatService, MockStreamingChatService } from '../services/streamingChatService';
 import type { ChatInterfaceProps, ChatMessage, Event, LocationSuggestion } from '../types/index';
+import type { ReconnectionState } from '../types/streaming';
+import { createInitialReconnectionState } from '../types/streaming';
 import './ChatInterface.css';
 import SearchPreferencesBar from './SearchPreferencesBar';
 import ChatComposer from './ChatComposer';
 import MessagesList from './MessagesList';
+import ReconnectionIndicator from './ReconnectionIndicator';
 
 // Message formatting moved into MessageItem
 
@@ -157,6 +160,10 @@ export default function ChatInterface({
   const [maxPrice, setMaxPrice] = useState<number>(100);
   // Debug mode state
   const [debugMode, setDebugMode] = useState<boolean>(() => isDebugEnabled());
+  // Reconnection state for SSE stream recovery
+  const [reconnectionState, setReconnectionState] = useState<ReconnectionState>(() =>
+    createInitialReconnectionState()
+  );
   // Date helpers are handled within DateRangePicker
   // MessagesList will handle scroll management
   const { preferences, getPreferencesContext } = useUserPreferences();
@@ -361,7 +368,10 @@ export default function ChatInterface({
       },
       // Context - include all filter values from SearchPreferencesBar
       {
-        location: location?.label || null,
+        // Location - use location_id for backend filtering, keep location for backwards compat
+        location_id: location?.id || null,
+        location_label: location?.label || null,
+        location: location?.label || null,  // Deprecated: kept for backwards compatibility
         preferences: {
           ...preferences,
           context_summary: getPreferencesContext()
@@ -386,7 +396,21 @@ export default function ChatInterface({
         debug: debugMode,
       },
       // Single model mode
-      true
+      true,
+      // Reconnection options
+      {
+        onReconnecting: (state) => {
+          setReconnectionState(state);
+        },
+        onReconnected: () => {
+          setReconnectionState(createInitialReconnectionState());
+        },
+        onAuthRequired: () => {
+          // Clear session and redirect to login
+          setReconnectionState(createInitialReconnectionState());
+          // The auth interceptor will handle the redirect
+        },
+      }
     );
 
     setStreamingCleanup(() => cleanup);
@@ -555,6 +579,20 @@ export default function ChatInterface({
 
       <MessagesList messages={messages} streaming={useStreaming} isLoading={isLoading} />
 
+      {/* Show reconnection indicator when SSE stream is recovering */}
+      {reconnectionState.isReconnecting && (
+        <div className="px-3 py-2">
+          <ReconnectionIndicator
+            reconnectionState={reconnectionState}
+            onCancel={() => {
+              // Cancel the stream and reset state
+              streamingCleanup?.();
+              setReconnectionState(createInitialReconnectionState());
+              setIsLoading(false);
+            }}
+          />
+        </div>
+      )}
 
       <ChatComposer
         value={inputMessage}

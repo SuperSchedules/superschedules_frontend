@@ -1,31 +1,37 @@
-import { useState, useCallback, useEffect } from 'react';
+import { useCallback, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../auth';
 import ChatInterface from '../components/ChatInterface';
 import EventSidebar from '../components/EventSidebar';
+import { useEventsState } from '../hooks/useEventsState';
 import type { Event } from '../types/index';
 import './Home.css';
 
 export default function Home() {
   const { user } = useAuth();
   const navigate = useNavigate();
-  const [accumulatedEvents, setAccumulatedEvents] = useState<Event[]>([]);
-  const [loadingSuggestions, setLoadingSuggestions] = useState(false);
 
-  // Accumulate events instead of replacing them
+  // Use events state hook for managing recommended vs all events
+  const {
+    recommended,
+    all,
+    isLoading,
+    addRecommendedEvents,
+    clearAll,
+    setLoading,
+  } = useEventsState();
+
+  // Handle suggested events from chat - these become the new recommended list
   const handleSuggestedEvents = useCallback((newEvents: Event[]) => {
-    setAccumulatedEvents((prev) => {
-      // Filter out duplicates by id
-      const existingIds = new Set(prev.map(e => e.id));
-      const uniqueNewEvents = newEvents.filter(e => !existingIds.has(e.id));
-      return [...prev, ...uniqueNewEvents];
-    });
-  }, []);
+    // Extract event IDs in order - these are the recommended events
+    const recommendedIds = newEvents.map(e => e.id);
+    addRecommendedEvents(recommendedIds, newEvents);
+  }, [addRecommendedEvents]);
 
-  // Clear accumulated events (will be called from ChatInterface clearChat)
+  // Clear all events (called from ChatInterface clearChat)
   const handleClearEvents = useCallback(() => {
-    setAccumulatedEvents([]);
-  }, []);
+    clearAll();
+  }, [clearAll]);
 
   // Handler for "Find more like this"
   const handleFindMoreLike = useCallback((event: Event) => {
@@ -50,18 +56,19 @@ export default function Home() {
         <div className="chat-column">
           <ChatInterface
             onSuggestedEvents={handleSuggestedEvents}
-            onSuggestionsLoading={setLoadingSuggestions}
+            onSuggestionsLoading={setLoading}
             onFindMoreLike={handleFindMoreLike}
             onClearEvents={handleClearEvents}
-            suggestedEvents={accumulatedEvents}
-            loadingSuggestions={loadingSuggestions}
+            suggestedEvents={all}
+            loadingSuggestions={isLoading}
             isVisible={true}
           />
         </div>
         <div className="events-column">
           <EventSidebar
-            events={accumulatedEvents}
-            loading={loadingSuggestions}
+            events={all}
+            recommendedEvents={recommended}
+            loading={isLoading}
             onFindMoreLike={handleFindMoreLike}
           />
         </div>

@@ -6,19 +6,31 @@ import { eventHasCoordinates } from '../../utils';
 import './EventsPanel.css';
 
 interface EventsPanelProps {
-  events: Event[];
+  events: Event[];                    // All events (superset, used for map)
+  recommendedEvents?: Event[];        // Recommended events (ordered, for list display)
   loading: boolean;
   onFindMoreLike: (event: Event) => void;
 }
 
-export default function EventsPanel({ events, loading, onFindMoreLike }: EventsPanelProps) {
+export default function EventsPanel({
+  events,
+  recommendedEvents,
+  loading,
+  onFindMoreLike
+}: EventsPanelProps) {
   const [selectedEventId, setSelectedEventId] = useState<string | number | undefined>(undefined);
   const [viewMode, setViewMode] = useState<'split' | 'list' | 'map'>('split');
   const eventRefs = useRef<Map<string | number, HTMLDivElement>>(new Map());
 
-  // Count events with coordinates for map display
+  // Events for list display: use recommended if provided, otherwise fall back to all events
+  const listEvents = recommendedEvents && recommendedEvents.length > 0 ? recommendedEvents : events;
+
+  // Count events with coordinates for map display (use all events for map)
   const eventsWithCoords = events.filter(eventHasCoordinates);
   const hasMapData = eventsWithCoords.length > 0;
+
+  // Track if we have separate recommended vs all events
+  const hasRecommendedSection = recommendedEvents && recommendedEvents.length > 0 && events.length > recommendedEvents.length;
 
   // Handle event selection from map
   const handleMapEventSelect = (id: string | number) => {
@@ -38,7 +50,7 @@ export default function EventsPanel({ events, loading, onFindMoreLike }: EventsP
   // Reset selection when events change
   useEffect(() => {
     setSelectedEventId(undefined);
-  }, [events]);
+  }, [events, recommendedEvents]);
 
   if (loading && events.length === 0) {
     return (
@@ -85,15 +97,28 @@ export default function EventsPanel({ events, loading, onFindMoreLike }: EventsP
         {(viewMode === 'split' || viewMode === 'list') && (
           <div className="events-list-section">
             <div className="events-count">
-              {events.length} {events.length === 1 ? 'event' : 'events'} found
-              {hasMapData && eventsWithCoords.length < events.length && (
-                <span className="map-count">
-                  ({eventsWithCoords.length} on map)
-                </span>
+              {hasRecommendedSection ? (
+                <>
+                  <span className="recommended-label">
+                    {listEvents.length} recommended
+                  </span>
+                  <span className="total-count">
+                    ({events.length} total on map)
+                  </span>
+                </>
+              ) : (
+                <>
+                  {listEvents.length} {listEvents.length === 1 ? 'event' : 'events'} found
+                  {hasMapData && eventsWithCoords.length < listEvents.length && (
+                    <span className="map-count">
+                      ({eventsWithCoords.length} on map)
+                    </span>
+                  )}
+                </>
               )}
             </div>
             <div className="events-list">
-              {events.map((event) => (
+              {listEvents.map((event) => (
                 <div
                   key={event.id}
                   ref={(el) => {

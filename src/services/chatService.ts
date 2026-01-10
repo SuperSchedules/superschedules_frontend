@@ -15,7 +15,10 @@ export class ChatService {
         message: message.trim(),
         context: {
           current_date: new Date().toISOString(),
-          location: context.location || null,
+          // Location - prefer location_id for backend filtering
+          location_id: context.location_id || null,
+          location_label: context.location_label || null,
+          location: context.location || null,  // Deprecated: backwards compat
           preferences: context.preferences || {},
           ...context
         },

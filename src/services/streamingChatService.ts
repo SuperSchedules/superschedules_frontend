@@ -1,14 +1,30 @@
-import { AuthFetch } from '../types/index';
+import { AuthFetch, ChatContext } from '../types/index';
 import { EVENTS_ENDPOINTS, STREAMING_API_BASE_URL } from '../constants/api';
+import {
+  SSEError,
+  SSEErrorCode,
+  ReconnectionState,
+  StreamingChatOptions,
+  DEFAULT_RECONNECTION_CONFIG,
+  calculateRetryDelay,
+  createInitialReconnectionState,
+} from '../types/streaming';
+import {
+  classifyError,
+  getErrorMessage,
+  requiresTokenRefresh,
+  requiresLogin,
+} from '../utils/sseErrorClassifier';
 
 export interface StreamingChatService {
   startChatStream(
-    message: string, 
+    message: string,
     onModelAToken: (token: string, done: boolean, metadata?: any) => void,
     onModelBToken: (token: string, done: boolean, metadata?: any) => void,
     onError: (error: string) => void,
-    context?: any,
-    singleModelMode?: boolean
+    context?: Partial<ChatContext>,
+    singleModelMode?: boolean,
+    options?: StreamingChatOptions
   ): () => void; // Returns cleanup function
 }
 
@@ -26,20 +42,23 @@ export class FastAPIStreamingChatService implements StreamingChatService {
       onModelAToken: (token: string, done: boolean, metadata?: any) => void,
       onModelBToken: (token: string, done: boolean, metadata?: any) => void,
       onError: (error: string) => void,
-      context: any = {},
-      singleModelMode: boolean = true
+      context: Partial<ChatContext> = {},
+      singleModelMode: boolean = true,
+      options: StreamingChatOptions = {}
     ): () => void {
       let isActive = true;
+      let controller = new AbortController();
+      const config = { ...DEFAULT_RECONNECTION_CONFIG, ...options.reconnectionConfig };
+      let reconnectionState = createInitialReconnectionState(config);
 
-    const controller = new AbortController();
-    const startStream = async () => {
+    const attemptStream = async (): Promise<boolean> => {
       try {
         // Get the auth token
         const token = await this.getAuthToken();
         if (import.meta.env.DEV) {
           console.log('Starting chat stream with token:', token ? 'Token present' : 'No token');
         }
-        
+
         // Use fetch with streaming (Server-Sent Events)
         const response = await fetch(`${this.baseURL}/api/v1/chat/stream`, {
           method: 'POST',
@@ -55,22 +74,38 @@ export class FastAPIStreamingChatService implements StreamingChatService {
             single_model_mode: singleModelMode,
             preferred_model: 'llama3.2:3b', // Use 3B model for single mode
             chat_history: context.chat_history || [],
-            debug: context.debug || false
+            debug: context.debug || false,
+            // location_id must be at top level (not in context) per backend schema
+            location_id: context.location_id || null,
           }),
         });
 
         if (!response.ok) {
           const errorText = await response.text();
           console.error('Chat stream error:', response.status, response.statusText, errorText);
-          throw new Error(`HTTP ${response.status}: ${response.statusText}. ${errorText}`);
+          // Classify the HTTP error
+          let errorData: unknown = errorText;
+          try {
+            errorData = JSON.parse(errorText);
+          } catch {
+            // Keep as string
+          }
+          const sseError = classifyError(errorData, response.status);
+          throw sseError;
         }
-        
+
         if (import.meta.env.DEV) {
           console.log('Chat stream response received, status:', response.status);
         }
 
         if (!response.body) {
-          throw new Error('No response body for streaming');
+          throw classifyError(new Error('No response body for streaming'));
+        }
+
+        // Reset reconnection state on successful connection
+        if (reconnectionState.isReconnecting) {
+          reconnectionState = createInitialReconnectionState(config);
+          options.onReconnected?.();
         }
 
         const reader = response.body.getReader();
@@ -80,7 +115,7 @@ export class FastAPIStreamingChatService implements StreamingChatService {
 
         while (isActive) {
           const { done, value } = await reader.read();
-          
+
           if (done) {
             // Flush any pending event data before exiting
             if (eventBuffer.length) {
@@ -93,9 +128,9 @@ export class FastAPIStreamingChatService implements StreamingChatService {
                 if (import.meta.env.DEV) console.error('Error parsing final stream data:', e);
               }
             }
-            break;
+            return true; // Stream completed successfully
           }
-          
+
           buffer += decoder.decode(value, { stream: true });
           // SSE parsing: events are separated by blank lines; join multiple data: lines
           const lines = buffer.split('\n');
@@ -120,14 +155,80 @@ export class FastAPIStreamingChatService implements StreamingChatService {
             }
           }
         }
+        return true; // Stream was cancelled by user
       } catch (error) {
-        if (isActive) {
-          onError(error instanceof Error ? error.message : 'Stream connection failed');
+        if (!isActive) return true; // Cancelled by user, don't retry
+
+        // Classify the error if not already an SSEError
+        const sseError: SSEError = (error as SSEError).code
+          ? (error as SSEError)
+          : classifyError(error);
+
+        // Handle auth_failed - non-recoverable, redirect to login
+        if (requiresLogin(sseError.code)) {
+          options.onAuthRequired?.();
+          onError(getErrorMessage(sseError, true));
+          return true; // Don't retry
         }
+
+        // Handle token_expired - attempt refresh and retry
+        if (requiresTokenRefresh(sseError.code)) {
+          if (import.meta.env.DEV) console.log('Token expired, attempting refresh before retry');
+          try {
+            // Force token refresh by making an authenticated request
+            await this.authFetch.get(EVENTS_ENDPOINTS.list, { params: { limit: 1 } });
+          } catch (refreshError) {
+            // If refresh fails with auth error, redirect to login
+            const refreshSseError = classifyError(refreshError);
+            if (requiresLogin(refreshSseError.code)) {
+              options.onAuthRequired?.();
+              onError(getErrorMessage(refreshSseError, true));
+              return true; // Don't retry
+            }
+          }
+        }
+
+        // Check if we should retry
+        if (!sseError.retryable || reconnectionState.attempt >= config.maxAttempts) {
+          onError(getErrorMessage(sseError, true));
+          return true; // Don't retry - give up
+        }
+
+        // Prepare for retry
+        reconnectionState.attempt += 1;
+        reconnectionState.isReconnecting = true;
+        reconnectionState.nextRetryMs = calculateRetryDelay(reconnectionState.attempt, config);
+
+        if (import.meta.env.DEV) {
+          console.log(`Reconnecting (attempt ${reconnectionState.attempt}/${config.maxAttempts}) in ${reconnectionState.nextRetryMs}ms`);
+        }
+
+        // Notify about reconnection attempt
+        options.onReconnecting?.({
+          attempt: reconnectionState.attempt,
+          maxAttempts: config.maxAttempts,
+          nextRetryMs: reconnectionState.nextRetryMs,
+          isReconnecting: true,
+        });
+
+        return false; // Will retry
       }
     };
 
-    startStream();
+    const startStreamWithRetry = async () => {
+      while (isActive) {
+        const completed = await attemptStream();
+        if (completed || !isActive) break;
+
+        // Wait before retry
+        await new Promise(resolve => setTimeout(resolve, reconnectionState.nextRetryMs));
+
+        // Create new abort controller for retry
+        controller = new AbortController();
+      }
+    };
+
+    startStreamWithRetry();
 
     // Return cleanup function
       return () => {
@@ -266,9 +367,10 @@ export class MockStreamingChatService implements StreamingChatService {
     message: string,
     onModelAToken: (token: string, done: boolean, metadata?: any) => void,
     onModelBToken: (token: string, done: boolean, metadata?: any) => void,
-    onError: (error: string) => void,
-    _context: any = {},
-    _singleModelMode: boolean = true
+    _onError: (error: string) => void,
+    _context: Partial<ChatContext> = {},
+    _singleModelMode: boolean = true,
+    _options: StreamingChatOptions = {}
   ): () => void {
     let isActive = true;
 

@@ -94,6 +94,13 @@ export interface Event {
   updated_at?: string;
 }
 
+// Events state management for recommended vs all events
+export interface EventsState {
+  recommendedIds: string[];                    // Ordered list of IDs from current chat turn
+  allEventsById: Record<string, Event>;       // All events seen in session (superset for map)
+  isLoadingRecommended: boolean;
+}
+
 // Chat/LLM types
 export interface ModelResponse {
   modelName?: string;
@@ -134,7 +141,10 @@ export interface ChatMessage {
 }
 
 export interface ChatContext {
-  location?: string | null;
+  // Location - prefer location_id for backend calls, keep location for backwards compat
+  location_id?: string | number | null;  // Primary identifier for backend filtering
+  location_label?: string | null;         // Human-readable label for display/logging
+  location?: string | null;               // Deprecated: kept for backwards compatibility
   preferences: Record<string, any>;
   session_id?: string | null;
   clear_suggestions?: boolean;

@@ -6,12 +6,18 @@ import type { Event } from '../../types';
 import './EventSidebar.css';
 
 interface EventSidebarProps {
-  events: Event[];
+  events: Event[];                    // All events (superset for map)
+  recommendedEvents?: Event[];        // Recommended events (ordered, for list)
   loading?: boolean;
   onFindMoreLike: (event: Event) => void;
 }
 
-export default function EventSidebar({ events, loading = false, onFindMoreLike }: EventSidebarProps) {
+export default function EventSidebar({
+  events,
+  recommendedEvents,
+  loading = false,
+  onFindMoreLike
+}: EventSidebarProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
 
@@ -70,6 +76,7 @@ export default function EventSidebar({ events, loading = false, onFindMoreLike }
         <div className="events-sidebar-content">
           <EventsPanel
             events={events}
+            recommendedEvents={recommendedEvents}
             loading={loading}
             onFindMoreLike={onFindMoreLike}
           />
