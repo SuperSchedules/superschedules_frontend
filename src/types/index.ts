@@ -129,6 +129,8 @@ export interface ChatMessage {
   suggestedEventIds?: (string | number)[];
   followUpQuestions?: string[];
   responseTimeMs?: number;
+  // Debug trace link (returned when debug mode is enabled)
+  debugRunId?: string | null;
 }
 
 export interface ChatContext {
@@ -151,6 +153,8 @@ export interface ChatContext {
   user_location?: { lat: number; lng: number } | null;
   max_distance_miles?: number | null;
   is_virtual?: boolean | null;
+  // Debug mode for RAG tracing
+  debug?: boolean;
 }
 
 export interface ChatRequestPayload {

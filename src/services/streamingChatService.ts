@@ -54,7 +54,8 @@ export class FastAPIStreamingChatService implements StreamingChatService {
             context,
             single_model_mode: singleModelMode,
             preferred_model: 'llama3.2:3b', // Use 3B model for single mode
-            chat_history: context.chat_history || []
+            chat_history: context.chat_history || [],
+            debug: context.debug || false
           }),
         });
 
@@ -154,6 +155,7 @@ export class FastAPIStreamingChatService implements StreamingChatService {
       suggested_event_ids: chunk.suggested_event_ids || [],
       follow_up_questions: chunk.follow_up_questions || [],
       response_time_ms: chunk.response_time_ms,
+      debug_run_id: chunk.debug_run_id || null,
     } : undefined;
 
     if (chunk.model === 'A') {
@@ -161,8 +163,14 @@ export class FastAPIStreamingChatService implements StreamingChatService {
     } else if (chunk.model === 'B') {
       onModelBToken(chunk.token || '', chunk.done, metadata);
     } else if (chunk.model === 'SYSTEM' && chunk.done) {
-      // Stream completed
-      if (import.meta.env.DEV) console.log('Stream completed');
+      // Stream completed - may contain debug_run_id
+      if (import.meta.env.DEV) {
+        console.log('Stream completed', chunk.debug_run_id ? `debug_run_id: ${chunk.debug_run_id}` : '');
+      }
+      // Pass debug_run_id to Model A handler for display
+      if (chunk.debug_run_id) {
+        onModelAToken('', true, { debug_run_id: chunk.debug_run_id });
+      }
     }
   }
 

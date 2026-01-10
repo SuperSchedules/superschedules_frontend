@@ -7,15 +7,29 @@ interface ChatComposerProps {
   onClear?: () => void;
   disabled?: boolean;
   placeholder?: string;
+  debugMode?: boolean;
+  onToggleDebug?: () => void;
 }
 
-export default function ChatComposer({ value, onChange, onSend, onClear, disabled = false, placeholder = "What events are you looking for?" }: ChatComposerProps) {
+export default function ChatComposer({
+  value,
+  onChange,
+  onSend,
+  onClear,
+  disabled = false,
+  placeholder = "What events are you looking for?",
+  debugMode = false,
+  onToggleDebug
+}: ChatComposerProps) {
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
       if (!disabled && value.trim()) onSend();
     }
   };
+
+  // Only show debug toggle in development mode
+  const showDebugToggle = import.meta.env.DEV && onToggleDebug;
 
   return (
     <div className="chat-input">
@@ -29,6 +43,16 @@ export default function ChatComposer({ value, onChange, onSend, onClear, disable
         rows={2 as any}
       />
       <div className="chat-input-buttons">
+        {showDebugToggle && (
+          <button
+            onClick={onToggleDebug}
+            className={`debug-toggle ${debugMode ? 'active' : ''}`}
+            title={debugMode ? 'Debug mode ON - click to disable' : 'Enable debug mode for RAG tracing'}
+          >
+            <i className="bi bi-bug"></i>
+            {debugMode ? 'Debug ON' : 'Debug'}
+          </button>
+        )}
         {onClear && (
           <button
             onClick={onClear}

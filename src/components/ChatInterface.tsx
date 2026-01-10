@@ -14,6 +14,19 @@ import MessagesList from './MessagesList';
 
 // Storage key helpers
 const CHAT_EXPIRY_DAYS = 7;
+const DEBUG_STORAGE_KEY = 'eventzombie_chat_debug';
+const DEBUG_ADMIN_URL = 'https://admin.eventzombie.com/admin/traces/chatdebugrun';
+
+// Check if debug mode is enabled via URL param or localStorage
+const isDebugEnabled = (): boolean => {
+  // Check URL param first
+  const urlParams = new URLSearchParams(window.location.search);
+  if (urlParams.get('debug') === 'true') {
+    return true;
+  }
+  // Fall back to localStorage
+  return localStorage.getItem(DEBUG_STORAGE_KEY) === 'true';
+};
 
 const getChatStorageKey = (userId?: number | string) => {
   const userPart = userId ? `user${userId}` : 'anonymous';
@@ -142,6 +155,8 @@ export default function ChatInterface({
   const [ageMin, setAgeMin] = useState<number>(0);
   const [ageMax, setAgeMax] = useState<number>(18);
   const [maxPrice, setMaxPrice] = useState<number>(100);
+  // Debug mode state
+  const [debugMode, setDebugMode] = useState<boolean>(() => isDebugEnabled());
   // Date helpers are handled within DateRangePicker
   // MessagesList will handle scroll management
   const { preferences, getPreferencesContext } = useUserPreferences();
@@ -195,6 +210,14 @@ export default function ChatInterface({
     localStorage.removeItem(chatKey);
     localStorage.removeItem(sessionKey);
     console.log('Chat cleared');
+  };
+
+  // Toggle debug mode (persists to localStorage)
+  const toggleDebugMode = () => {
+    const newValue = !debugMode;
+    setDebugMode(newValue);
+    localStorage.setItem(DEBUG_STORAGE_KEY, String(newValue));
+    console.log(`Debug mode ${newValue ? 'enabled' : 'disabled'}`);
   };
 
   // MessagesList auto-scrolls on updates
@@ -306,7 +329,8 @@ export default function ChatInterface({
                 isComplete: done,
                 suggestedEventIds: metadata?.suggested_event_ids || msg.suggestedEventIds,
                 followUpQuestions: metadata?.follow_up_questions || msg.followUpQuestions,
-                responseTimeMs: metadata?.response_time_ms || msg.responseTimeMs
+                responseTimeMs: metadata?.response_time_ms || msg.responseTimeMs,
+                debugRunId: metadata?.debug_run_id || msg.debugRunId
               }
             : msg
         ));
@@ -358,6 +382,8 @@ export default function ChatInterface({
         user_location: userLocation,
         max_distance_miles: getMaxDistanceFromTransportation(preferences.transportation),
         is_virtual: null, // null = any (in-person, virtual, or mixed)
+        // Debug mode for RAG tracing
+        debug: debugMode,
       },
       // Single model mode
       true
@@ -536,6 +562,8 @@ export default function ChatInterface({
         onSend={() => handleSendMessage()}
         onClear={clearChat}
         disabled={isLoading}
+        debugMode={debugMode}
+        onToggleDebug={toggleDebugMode}
       />
     </div>
   );

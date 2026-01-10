@@ -927,18 +927,75 @@
     align-items: flex-start;
     gap: 0.5rem;
   }
-  
+
   .event-header .event-location {
     white-space: normal;
     flex-wrap: wrap;
   }
-  
+
   .event-meta {
     gap: 0.25rem;
   }
-  
+
   .meta-tag {
     font-size: 0.75rem;
     padding: 0.2rem 0.4rem;
   }
+}
+
+/* Debug mode styles */
+.debug-toggle {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.25rem 0.5rem;
+  background: transparent;
+  border: 1px solid var(--border-color);
+  border-radius: 4px;
+  font-size: 0.75rem;
+  color: var(--text-color);
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.debug-toggle:hover {
+  background: var(--sidebar-bg-color);
+}
+
+.debug-toggle.active {
+  background: #ffc107;
+  border-color: #ffc107;
+  color: #212529;
+}
+
+.debug-toggle i {
+  font-size: 0.8rem;
+}
+
+.debug-trace-link {
+  margin-top: 0.5rem;
+  padding-top: 0.5rem;
+  border-top: 1px dashed var(--border-color);
+}
+
+.debug-trace-link a {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.75rem;
+  color: #6c757d;
+  text-decoration: none;
+  padding: 0.25rem 0.5rem;
+  background: var(--sidebar-bg-color);
+  border-radius: 4px;
+  transition: all 0.2s;
+}
+
+.debug-trace-link a:hover {
+  color: #007bff;
+  background: rgba(0, 123, 255, 0.1);
+}
+
+.debug-trace-link a i {
+  font-size: 0.7rem;
 }
